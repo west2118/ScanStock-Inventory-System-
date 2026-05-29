@@ -8,7 +8,8 @@ import {
 import { accessTokenCookie, refreshTokenCookie } from "../utils/cookie.js";
 
 export const register = async (req, res) => {
-  const { name, username, role, status, password, confirmPassword } = req.body;
+  const { name, username, role, status, password, confirmPassword, branchId } =
+    req.body;
 
   try {
     if (password !== confirmPassword)
@@ -16,7 +17,14 @@ export const register = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Password didn't matched" });
 
-    const user = await registerService(name, username, role, status, password);
+    const user = await registerService(
+      name,
+      username,
+      role,
+      status,
+      password,
+      branchId,
+    );
 
     res.status(201).json({ message: "User created successfully!", user });
   } catch (error) {

@@ -46,7 +46,7 @@ const InventoryTableRow = ({
         </p>
       </td>
       <td className="px-6 py-4 text-center">
-        <p className="text-sm text-gray-600">{item.location}</p>
+        <p className="text-sm text-gray-600">{item.location ?? "Unassigned"}</p>
       </td>
       <td className="px-6 py-4 text-center">
         <div className="flex items-center justify-center gap-1">

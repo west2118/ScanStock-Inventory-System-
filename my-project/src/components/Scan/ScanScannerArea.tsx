@@ -123,6 +123,9 @@ const ScanScannerArea = ({
 
       const res = await fetch(
         `http://localhost:5001/api/product-scan/${barcodeInput}`,
+        {
+          credentials: "include",
+        },
       );
 
       // ❌ Not found

@@ -6,7 +6,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserType | null>(null);
-  const [loading, setLoading] = useState(true); // ✅ ADD THIS
+  const [loading, setLoading] = useState(true);
 
   const fetchUserData = async () => {
     try {

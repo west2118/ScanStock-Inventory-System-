@@ -66,7 +66,7 @@ const ProductTableRow = ({
             <Eye size={16} />
           </button>
 
-          {isAdmin && (
+          {/* {isAdmin && (
             <>
               <button
                 onClick={() => handleSelectProduct(product.id, "edit")}
@@ -84,7 +84,7 @@ const ProductTableRow = ({
                 <Trash2 size={16} />
               </button>
             </>
-          )}
+          )} */}
         </div>
       </td>
     </tr>

@@ -98,21 +98,29 @@ const InentoryStockModal = ({
                 {selectedProduct?.productName}
               </span>
             </p>
-            <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
-              <span>
-                SKU: <span className="font-medium">{selectedProduct?.sku}</span>
-              </span>
-              <span>
-                Barcode:{" "}
-                <span className="font-medium">{selectedProduct?.barcode}</span>
-              </span>
-              <span>
-                Category:{" "}
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
+              <span className="flex items-center gap-1">
+                <span className="text-gray-500">SKU:</span>
                 <span className="font-medium">
-                  {selectedProduct?.category &&
-                  selectedProduct?.category.length > 3
-                    ? capitalizeFirst(selectedProduct?.category)
-                    : selectedProduct?.category.toUpperCase()}
+                  {selectedProduct?.sku || "-"}
+                </span>
+              </span>
+
+              <span className="flex items-center gap-1">
+                <span className="text-gray-500">Barcode:</span>
+                <span className="font-medium">
+                  {selectedProduct?.barcode || "-"}
+                </span>
+              </span>
+
+              <span className="flex items-center gap-1">
+                <span className="text-gray-500">Category:</span>
+                <span className="font-medium">
+                  {selectedProduct?.category
+                    ? selectedProduct.category.length > 3
+                      ? capitalizeFirst(selectedProduct.category)
+                      : selectedProduct.category.toUpperCase()
+                    : "-"}
                 </span>
               </span>
             </div>

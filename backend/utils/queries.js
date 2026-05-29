@@ -40,74 +40,132 @@ previous_range AS (
   FROM date_range
 ),
 
--- 🔥 total stock (separate aggregation)
 total_stock AS (
-  SELECT COALESCE(SUM(stock), 0) AS total_stock
-  FROM products
+  SELECT
+    COALESCE(SUM(stock), 0) AS total_stock
+  FROM branch_inventory
+  WHERE branch_id = $5
 ),
 
 current_data AS (
   SELECT
-    COALESCE(SUM(sm.quantity * sm.price) FILTER (WHERE sm.type = 'OUT'), 0) AS revenue,
-    COALESCE(SUM(sm.quantity) FILTER (WHERE sm.type = 'IN'), 0) AS stock_in,
-    COALESCE(SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'), 0) AS stock_out
+    (
+      SELECT COALESCE(SUM(t.total_amount), 0)
+      FROM transactions t
+      CROSS JOIN date_range dr
+      WHERE t.branch_id = $5
+        AND t.status = 'completed'
+        AND t.payment_status = 'paid'
+        AND t.created_at >= dr.start_date
+        AND t.created_at < dr.end_date
+    ) AS revenue,
+
+    COALESCE(
+      SUM(sm.quantity) FILTER (WHERE sm.type = 'IN'),
+      0
+    ) AS stock_in,
+
+    COALESCE(
+      SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'),
+      0
+    ) AS stock_out
+
   FROM stock_movements sm
   CROSS JOIN date_range dr
+
   WHERE sm.created_at >= dr.start_date
     AND sm.created_at < dr.end_date
+    AND sm.branch_id = $5
 ),
 
 previous_data AS (
   SELECT
-    COALESCE(SUM(sm.quantity * sm.price) FILTER (WHERE sm.type = 'OUT'), 0) AS revenue,
-    COALESCE(SUM(sm.quantity) FILTER (WHERE sm.type = 'IN'), 0) AS stock_in,
-    COALESCE(SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'), 0) AS stock_out
+    (
+      SELECT COALESCE(SUM(t.total_amount), 0)
+      FROM transactions t
+      CROSS JOIN previous_range pr
+      WHERE t.branch_id = $5
+        AND t.status = 'completed'
+        AND t.payment_status = 'paid'
+        AND t.created_at >= pr.start_date
+        AND t.created_at < pr.end_date
+    ) AS revenue,
+
+    COALESCE(
+      SUM(sm.quantity) FILTER (WHERE sm.type = 'IN'),
+      0
+    ) AS stock_in,
+
+    COALESCE(
+      SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'),
+      0
+    ) AS stock_out
+
   FROM stock_movements sm
   CROSS JOIN previous_range pr
+
   WHERE sm.created_at >= pr.start_date
     AND sm.created_at < pr.end_date
+    AND sm.branch_id = $5
 )
 
 SELECT
-  -- CURRENT VALUES
   c.revenue AS "totalRevenue",
   c.stock_in AS "stockIns",
   c.stock_out AS "stockOuts",
 
-  -- TURNOVER
   ROUND(
-    CASE 
+    CASE
       WHEN ts.total_stock = 0 THEN 0
-      ELSE (c.stock_out / ts.total_stock::numeric) * 100
+      ELSE (
+        c.stock_out / ts.total_stock::numeric
+      ) * 100
     END
   , 2) AS "turnover",
 
-  -- % DIFFERENCES
   ROUND(
-    CASE WHEN p2.revenue = 0 THEN 0
-    ELSE ((c.revenue - p2.revenue) / p2.revenue::numeric) * 100
+    CASE
+      WHEN p2.revenue = 0 THEN 0
+      ELSE (
+        (c.revenue - p2.revenue)
+        / p2.revenue::numeric
+      ) * 100
     END
   , 2) AS "revenueChange",
 
   ROUND(
-    CASE WHEN p2.stock_in = 0 THEN 0
-    ELSE ((c.stock_in - p2.stock_in) / p2.stock_in::numeric) * 100
+    CASE
+      WHEN p2.stock_in = 0 THEN 0
+      ELSE (
+        (c.stock_in - p2.stock_in)
+        / p2.stock_in::numeric
+      ) * 100
     END
   , 2) AS "stockInChange",
 
   ROUND(
-    CASE WHEN p2.stock_out = 0 THEN 0
-    ELSE ((c.stock_out - p2.stock_out) / p2.stock_out::numeric) * 100
+    CASE
+      WHEN p2.stock_out = 0 THEN 0
+      ELSE (
+        (c.stock_out - p2.stock_out)
+        / p2.stock_out::numeric
+      ) * 100
     END
   , 2) AS "stockOutChange",
 
   ROUND(
-    CASE 
-      WHEN ts.total_stock = 0 OR p2.stock_out = 0 THEN 0
+    CASE
+      WHEN ts.total_stock = 0
+        OR p2.stock_out = 0
+      THEN 0
       ELSE (
-        ((c.stock_out / ts.total_stock::numeric) - 
-         (p2.stock_out / ts.total_stock::numeric))
-        / (p2.stock_out / ts.total_stock::numeric)
+        (
+          (c.stock_out / ts.total_stock::numeric)
+          -
+          (p2.stock_out / ts.total_stock::numeric)
+        )
+        /
+        (p2.stock_out / ts.total_stock::numeric)
       ) * 100
     END
   , 2) AS "turnoverChange"
@@ -121,11 +179,7 @@ export const getTimeSeriesQuery = (metric) => {
   const metricSelect = {
     revenue: `
         COALESCE(
-        SUM(CASE 
-                WHEN sm.type = 'OUT' 
-                THEN sm.quantity * sm.price 
-                ELSE 0 
-            END), 
+        SUM(t.total_amount), 
         0) AS value
     `,
 
@@ -146,11 +200,7 @@ export const getTimeSeriesQuery = (metric) => {
 
     performance: `
         COALESCE(
-          SUM(CASE 
-                  WHEN sm.type = 'OUT' 
-                  THEN sm.quantity * sm.price 
-                  ELSE 0 
-              END), 
+          SUM(t.total_amount), 
         0) AS value1,
         COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) AS value2,
         COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS value3
@@ -348,8 +398,32 @@ export const getTimeSeriesQuery = (metric) => {
     ${metricSelect[metric]}
 
   FROM series s
+  LEFT JOIN transactions t
+    ON t.created_at >= s.slot
+    AND t.status = 'completed'
+    AND t.payment_status = 'paid'
+    AND t.branch_id = $5
+    AND t.created_at <
+      CASE
+        WHEN $1 = 'range'
+          THEN s.period_end
+        ELSE s.slot +
+          CASE
+            WHEN $1 = 'daily' THEN INTERVAL '1 hour'
+            WHEN $1 = 'weekly' THEN INTERVAL '1 day'
+            WHEN $1 = 'monthly' THEN
+              LEAST(
+                slot + INTERVAL '1 week',
+                DATE_TRUNC('month', slot) + INTERVAL '1 month'
+              ) - slot
+            WHEN $1 = 'quarterly' THEN INTERVAL '1 month'
+            WHEN $1 = 'yearly' THEN INTERVAL '1 month'
+          END
+      END
+
   LEFT JOIN stock_movements sm
     ON sm.created_at >= s.slot
+    AND sm.branch_id = $5
     AND sm.created_at <
       CASE
         WHEN $1 = 'range'
@@ -380,29 +454,50 @@ ${DATE_RANGE_CTE}
 
 SELECT
   p.category AS "name",
-  SUM(sm.quantity)::int AS value1,
-  SUM(sm.quantity * sm.price)::int AS value2
-FROM stock_movements sm
-JOIN products p ON p.id = sm.product_id
+
+  COALESCE(
+    SUM(ti.quantity),
+    0
+  )::int AS value1,
+
+  COALESCE(
+    SUM(ti.subtotal),
+    0
+  )::int AS value2
+
+FROM transaction_items ti
+
+JOIN transactions t
+  ON t.id = ti.transaction_id
+
+JOIN products p
+  ON p.id = ti.product_id
+
 CROSS JOIN date_range dr
-WHERE sm.type = 'OUT'
-  AND sm.created_at >= dr.start_date
-  AND sm.created_at < dr.end_date
+
+WHERE t.branch_id = $5
+  AND t.status = 'completed'
+  AND t.created_at >= dr.start_date
+  AND t.created_at < dr.end_date
+
 GROUP BY p.category
-ORDER BY value1 DESC;
+
+ORDER BY value1 DESC
 `;
 
 export const LOW_STOCK_QUERY = `
 SELECT
-  id,
-  sku,
-  product_name AS "productName",
-  stock,
-  stock_low AS "stockLow",
-  stock_critical AS "stockCritical"
-FROM products
-WHERE stock <= stock_low
-ORDER BY stock ASC
+  p.id,
+  p.sku,
+  p.product_name AS "productName",
+  bi.stock,
+  bi.stock_low AS "stockLow",
+  bi.stock_critical AS "stockCritical"
+FROM branch_inventory bi
+JOIN products p ON p.id = bi.product_id
+WHERE bi.branch_id = $1
+  AND bi.stock <= bi.stock_low
+ORDER BY bi.stock ASC
 LIMIT 5
 `;
 
@@ -413,55 +508,66 @@ SELECT
   p.id,
   p.product_name AS "productName",
   p.sku,
-  p.stock,
+
+  bi.stock,
 
   COALESCE(
-    SUM(CASE WHEN sm.type = 'OUT' THEN sm.quantity ELSE 0 END), 
+    SUM(ti.quantity),
     0
   ) AS "sales",
 
   COALESCE(
-    SUM(CASE 
-      WHEN sm.type = 'OUT' 
-      THEN sm.quantity * sm.price 
-      ELSE 0 
-    END), 
+    SUM(ti.subtotal),
     0
   ) AS "revenue",
 
   ROUND(
     CASE 
-      WHEN p.stock = 0 THEN 0
-      ELSE 
-        (
-          COALESCE(
-            SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'), 
-            0
-          ) / p.stock::numeric
-        ) * 100
+      WHEN bi.stock = 0 THEN 0
+      ELSE (
+        COALESCE(SUM(ti.quantity), 0)
+        / bi.stock::numeric
+      ) * 100
     END
   , 2)::int AS "turnover"
 
-FROM products p
+FROM branch_inventory bi
+
+JOIN products p
+  ON p.id = bi.product_id
 
 CROSS JOIN date_range dr
 
-LEFT JOIN stock_movements sm 
-  ON sm.product_id = p.id
-  AND sm.created_at >= dr.start_date
-  AND sm.created_at < dr.end_date
+LEFT JOIN transaction_items ti
+  ON ti.product_id = p.id
 
-GROUP BY p.id, p.product_name, p.sku, p.stock
+LEFT JOIN transactions t
+  ON t.id = ti.transaction_id
+  AND t.branch_id = bi.branch_id
+  AND t.created_at >= dr.start_date
+  AND t.created_at < dr.end_date
+  AND t.status != 'voided'
+
+WHERE bi.branch_id = $5
+
+GROUP BY
+  p.id,
+  p.product_name,
+  p.sku,
+  bi.stock
+
 ORDER BY "sales" DESC
 LIMIT 5
 `;
 
 export const STOCK_CATEGORY_QUERY = `
 SELECT
-  category AS "label",
-  COALESCE(SUM(stock), 0) AS "value"
-FROM products
-GROUP BY "label"
+  p.category AS "label",
+  COALESCE(SUM(bi.stock), 0) AS "value"
+FROM branch_inventory bi
+JOIN products p ON p.id = bi.product_id
+WHERE bi.branch_id = $1
+GROUP BY p.category
 ORDER BY "value" DESC
 LIMIT 5
 `;
@@ -471,9 +577,13 @@ ${DATE_RANGE_CTE}
 
 SELECT
   p.product_name AS "productName",
-  p.stock,
 
-  COALESCE(p.stock * p.price, 0) AS "stockValue",
+  bi.stock,
+
+  COALESCE(
+    bi.stock * p.price,
+    0
+  ) AS "stockValue",
 
   COALESCE(
     SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'),
@@ -482,27 +592,36 @@ SELECT
 
   ROUND(
     CASE 
-      WHEN p.stock = 0 THEN 0
-      ELSE 
-        (
-          COALESCE(
-            SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'), 
-            0
-          ) / p.stock::numeric
-        ) * 100
+      WHEN bi.stock = 0 THEN 0
+      ELSE (
+        COALESCE(
+          SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'),
+          0
+        ) / bi.stock::numeric
+      ) * 100
     END
   , 2)::int AS "turnover"
 
-  FROM products p
+FROM branch_inventory bi
 
-  CROSS JOIN date_range dr
+JOIN products p
+  ON p.id = bi.product_id
 
-  LEFT JOIN stock_movements sm 
-    ON sm.product_id = p.id
-    AND sm.created_at >= dr.start_date
-    AND sm.created_at < dr.end_date
+CROSS JOIN date_range dr
 
-  GROUP BY p.product_name, p.stock, p.price
-  ORDER BY "sales" DESC
-  LIMIT 5
+LEFT JOIN stock_movements sm
+  ON sm.product_id = p.id
+  AND sm.branch_id = bi.branch_id
+  AND sm.created_at >= dr.start_date
+  AND sm.created_at < dr.end_date
+
+WHERE bi.branch_id = $5
+
+GROUP BY
+  p.product_name,
+  bi.stock,
+  p.price
+
+ORDER BY "sales" DESC
+LIMIT 5
 `;

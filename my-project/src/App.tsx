@@ -15,6 +15,8 @@ import Reports from "./page/Reports";
 import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRedirect from "./components/RoleRedirect";
+import POSPage from "./page/POSPage";
+import TransactionsPage from "./page/Transactions";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -27,7 +29,7 @@ const router = createBrowserRouter(
       <Route
         path="/:role"
         element={
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+          <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
             <DashboardLayout />
           </ProtectedRoute>
         }
@@ -35,7 +37,7 @@ const router = createBrowserRouter(
         <Route
           index
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "branch_manager"]}>
               <Dashboard />
             </ProtectedRoute>
           }
@@ -43,15 +45,31 @@ const router = createBrowserRouter(
         <Route
           path="products"
           element={
-            <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
               <Products />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="pos"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
+              <POSPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="transactions"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
+              <TransactionsPage />
             </ProtectedRoute>
           }
         />
         <Route
           path="inventory"
           element={
-            <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
               <Inventory />
             </ProtectedRoute>
           }
@@ -59,7 +77,7 @@ const router = createBrowserRouter(
         <Route
           path="scan"
           element={
-            <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
               <Scan />
             </ProtectedRoute>
           }
@@ -67,7 +85,7 @@ const router = createBrowserRouter(
         <Route
           path="movements"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "branch_manager"]}>
               <Movements />
             </ProtectedRoute>
           }
@@ -75,7 +93,7 @@ const router = createBrowserRouter(
         <Route
           path="reports"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "branch_manager"]}>
               <Reports />
             </ProtectedRoute>
           }

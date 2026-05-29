@@ -171,6 +171,7 @@ export const getDefaultRouteByRole = (role: string) => {
 
   const routes = {
     admin: "/admin",
+    branch_manager: "/branch_manager",
     staff: "/staff/scan",
   };
 

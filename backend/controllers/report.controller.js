@@ -2,6 +2,8 @@ import { getReportsService } from "../services/report.service.js";
 import { VALID_MODES } from "../utils/constants.js";
 
 export const getReports = async (req, res) => {
+  const { branchId } = req.user;
+
   const mode = VALID_MODES.includes(req.query.mode) ? req.query.mode : "daily";
 
   const year =
@@ -24,6 +26,7 @@ export const getReports = async (req, res) => {
       startDate,
       endDate,
       reportType,
+      branchId,
     );
 
     res.status(200).json(data);

@@ -17,12 +17,13 @@ export const registerService = async (
   role,
   status,
   password,
+  branchId,
 ) => {
   const hash = await bcrypt.hash(password, 10);
 
   const result = await pool.query(
-    `INSERT INTO users(username, password, name, role, status) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-    [username, hash, name, role, status],
+    `INSERT INTO users(username, password, name, role, status, branch_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+    [username, hash, name, role, status, branchId],
   );
 
   return result.rows[0];
@@ -39,7 +40,12 @@ export const loginService = async ({ username, password }) => {
   const match = await bcrypt.compare(password, user.password);
   if (!match) throw new Error("Password not matched!");
 
-  const accessToken = createAccessToken({ id: user.id, role: user.role });
+  const accessToken = createAccessToken({
+    id: user.id,
+    role: user.role,
+    name: user.name,
+    branchId: user.branch_id,
+  });
   const refreshToken = createRefreshToken(user);
 
   const hash = crypto.createHash("sha256").update(refreshToken).digest("hex");
@@ -52,7 +58,12 @@ export const loginService = async ({ username, password }) => {
   return {
     accessToken,
     refreshToken,
-    user: { id: user.id, name: user.name, role: user.role },
+    user: {
+      id: user.id,
+      role: user.role,
+      name: user.name,
+      branchId: user.branch_id,
+    },
   };
 };
 
@@ -67,7 +78,12 @@ export const refreshTokenService = async (refreshToken) => {
 
   if (!rows.length) throw new Error("Invalid refresh token");
 
-  return createAccessToken({ id: payload.id, role: payload.role });
+  return createAccessToken({
+    id: payload.id,
+    role: payload.role,
+    name: payload.name,
+    branchId: payload.branchId,
+  });
 };
 
 export const revokeRefreshTokenService = async (refreshToken) => {
@@ -78,10 +94,17 @@ export const revokeRefreshTokenService = async (refreshToken) => {
     [hash],
   );
 };
-
 export const meService = async (userId) => {
   const { rows } = await pool.query(
-    "SELECT id, role, name FROM users WHERE id=$1",
+    `
+    SELECT 
+      id,
+      role,
+      name,
+      branch_id AS "branchId"
+    FROM users
+    WHERE id = $1
+    `,
     [userId],
   );
 

@@ -7,6 +7,8 @@ import {
   ClipboardList,
   Code,
   Box,
+  PercentSquareIcon,
+  Receipt,
 } from "lucide-react";
 
 // Navigation items
@@ -14,27 +16,49 @@ export const navigation = [
   {
     id: "",
     name: "Dashboard",
-    roles: ["admin"],
+    roles: ["admin", "branch_manager"],
     icon: LayoutDashboard,
   },
-  { id: "products", name: "Products", roles: ["admin", "staff"], icon: Box },
+  {
+    id: "POS",
+    name: "POS",
+    roles: ["admin", "branch_manager", "staff"],
+    icon: PercentSquareIcon,
+  },
+  {
+    id: "transactions",
+    name: "Transactions",
+    roles: ["admin", "branch_manager", "staff"],
+    icon: Receipt,
+  },
+  {
+    id: "products",
+    name: "Products",
+    roles: ["admin", "branch_manager", "staff"],
+    icon: Box,
+  },
   {
     id: "inventory",
     name: "Inventory",
-    roles: ["admin", "staff"],
+    roles: ["admin", "branch_manager", "staff"],
     icon: Package,
   },
-  { id: "scan", name: "Scan Barcode", roles: ["admin", "staff"], icon: Code },
+  {
+    id: "scan",
+    name: "Scan Barcode",
+    roles: ["admin", "branch_manager", "staff"],
+    icon: Code,
+  },
   {
     id: "movements",
     name: "Movements",
-    roles: ["admin"],
+    roles: ["admin", "branch_manager"],
     icon: History,
   },
   {
     id: "reports",
     name: "Reports",
-    roles: ["admin"],
+    roles: ["admin", "branch_manager"],
     icon: ClipboardList,
   },
 ];

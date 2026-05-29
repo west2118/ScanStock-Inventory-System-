@@ -4,6 +4,7 @@ const createUserTable = async () => {
   const queryText = `
     CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
+    branch_id INT NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     username VARCHAR(100) UNIQUE NOT NULL,
     password TEXT NOT NULL,
@@ -14,7 +15,7 @@ const createUserTable = async () => {
 );`;
 
   try {
-    pool.query(queryText);
+    await pool.query(queryText);
     console.log("User table created if not exists");
   } catch (error) {
     console.log("Error creating user table: ", error);

@@ -15,8 +15,9 @@ export const getReportsService = async (
   startDate,
   endDate,
   reportType,
+  branchId,
 ) => {
-  const params = [mode, year || "2026", startDate, endDate];
+  const params = [mode, year || "2026", startDate, endDate, branchId];
 
   let reportData;
 
@@ -62,7 +63,7 @@ export const getOverviewReportService = async (params) => {
         client.query(getTimeSeriesQuery("revenue"), params),
         client.query(getTimeSeriesQuery("stocks"), params),
         client.query(CATEGORY_PERFORMANCE_QUERY, params),
-        client.query(LOW_STOCK_QUERY),
+        client.query(LOW_STOCK_QUERY, [params[4]]),
       ]);
 
     return {
@@ -104,7 +105,7 @@ export const getInventoryReportService = async (params) => {
     const [categoryPerformance, stockCategory, inventoryMetrics] =
       await Promise.all([
         client.query(CATEGORY_PERFORMANCE_QUERY, params),
-        client.query(STOCK_CATEGORY_QUERY),
+        client.query(STOCK_CATEGORY_QUERY, [params[4]]),
         client.query(INVENTORY_METRICS_QUERY, params),
       ]);
 

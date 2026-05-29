@@ -8,7 +8,12 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import Modal from "../UI/Modal";
-import { capitalizeFirst, dateFormatter, fetchData } from "../../utils/utils";
+import {
+  capitalizeFirst,
+  dateFormatter,
+  fetchData,
+  timeFormatter,
+} from "../../utils/utils";
 import type { InventoryMovementType } from "../../utils/types";
 import { useQuery } from "@tanstack/react-query";
 import ModalLoading from "../ModalLoading";
@@ -72,6 +77,10 @@ const StockMovementDetailModal = ({
                   <p className="mt-1 text-sm text-gray-900">
                     {selectedMovement?.createdAt
                       ? dateFormatter(selectedMovement?.createdAt)
+                      : "-"}{" "}
+                    at{" "}
+                    {selectedMovement?.createdAt
+                      ? timeFormatter(selectedMovement?.createdAt)
                       : "-"}
                   </p>
                 </div>
@@ -115,14 +124,6 @@ const StockMovementDetailModal = ({
                       {selectedMovement?.barcode}
                     </p>
                   </div>
-                </div>
-                <div className="border border-gray-200 rounded-lg p-4 shadow-xs hover:shadow-sm transition-shadow">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </label>
-                  <p className="mt-1 text-2xl font-bold text-gray-900">
-                    ₱{selectedMovement?.price.toLocaleString()}
-                  </p>
                 </div>
               </div>
             </div>

@@ -162,15 +162,7 @@ const ProductDetailModal = ({
               <Layers size={18} className="text-gray-500" />
               Stock Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="border border-gray-200 rounded-lg p-4 shadow-xs hover:shadow-sm transition-shadow">
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Current Stock
-                </label>
-                <p className="mt-1 text-2xl font-bold text-gray-900">
-                  {selectedProduct?.stock}
-                </p>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="border border-gray-200 rounded-lg p-4 shadow-xs hover:shadow-sm transition-shadow">
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Low Stock Level
@@ -230,7 +222,9 @@ const ProductDetailModal = ({
                 </label>
                 <div className="flex items-center gap-2 mt-1">
                   <MapPin size={14} className="text-gray-400" />
-                  <p className="text-gray-900">{selectedProduct?.location}</p>
+                  <p className="text-gray-900">
+                    {selectedProduct?.location ?? "No Current Location"}
+                  </p>
                 </div>
               </div>
               <div className="border border-gray-200 rounded-lg p-4 shadow-xs hover:shadow-sm transition-shadow">

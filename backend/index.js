@@ -10,9 +10,17 @@ import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import stockMovementRoutes from "./routes/stock.movement.routes.js";
 import reportRoutes from "./routes/report.route.js";
+import branchRoutes from "./routes/branch.routes.js";
+import transactionRoutes from "./routes/transaction.routes.js";
 
 import createProductTable from "./data/createProductTable.js";
 import createStockMovementTable from "./data/createStockMovement.js";
+import createBranchTable from "./data/createBranchTable.js";
+import createBranchInventoryTable from "./data/createBranchInventoryTable.js";
+import createTransactionTable from "./data/createTransactionTable.js";
+import createTransactionItemTable from "./data/createTransactionItemTable.js";
+import createUserTable from "./data/createUserTable.js";
+import createRefreshTokenTable from "./data/createRefreshTokenTable.js";
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -31,12 +39,18 @@ app.use("/api", authRoutes);
 app.use("/api", productRoutes);
 app.use("/api", stockMovementRoutes);
 app.use("/api", reportRoutes);
+app.use("/api", branchRoutes);
+app.use("/api", transactionRoutes);
 
 // Create table before starting server
+createBranchInventoryTable();
+createProductTable();
+// createBranchTable();
 // createUserTable();
 // createRefreshTokenTable();
-// createProductTable();
 // createStockMovementTable();
+createTransactionTable();
+createTransactionItemTable();
 
 // Testing postgres
 app.get("/", async (req, res) => {

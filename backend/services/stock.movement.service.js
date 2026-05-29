@@ -99,12 +99,16 @@ export const getStockMovementsService = async ({
   search = "",
   category = "",
   type = "",
+  branchId,
 }) => {
   const offset = (page - 1) * limit;
 
   const conditions = [];
-  const values = [];
+  const values = [branchId];
   let idx = 1;
+
+  conditions.push(`sm.branch_id = $${idx}`);
+  idx++;
 
   /* -------------------- SEARCH -------------------- */
   if (search) {
@@ -159,7 +163,6 @@ export const getStockMovementsService = async ({
       sm.id,
       sm.type,
       sm.quantity,
-      sm.price,
       sm.reference,
       sm.before_stock AS "beforeStock",
       sm.after_stock AS "afterStock",
@@ -194,54 +197,104 @@ export const getStockMovementsService = async ({
 };
 
 // Get Dashboard Summary Stats Cards
-export const getDashboardSummaryCardsService = async (client) => {
-  const result = await client.query(`
+export const getDashboardSummaryCardsService = async (client, branchId) => {
+  const result = await client.query(
+    `
     WITH today AS (
       SELECT
-        COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) AS stockIn,
-        COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS stockOut
+        COALESCE(
+          SUM(
+            CASE 
+              WHEN type = 'IN' THEN quantity 
+              ELSE 0 
+            END
+          ), 0
+        ) AS stockIn,
+
+        COALESCE(
+          SUM(
+            CASE 
+              WHEN type = 'OUT' THEN quantity 
+              ELSE 0 
+            END
+          ), 0
+        ) AS stockOut
+
       FROM stock_movements
-      WHERE created_at >= CURRENT_DATE
+
+      WHERE branch_id = $1
+        AND created_at >= CURRENT_DATE
         AND created_at < CURRENT_DATE + INTERVAL '1 day'
     ),
 
     yesterday AS (
       SELECT
-        COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) AS stockIn,
-        COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS stockOut
+        COALESCE(
+          SUM(
+            CASE 
+              WHEN type = 'IN' THEN quantity 
+              ELSE 0 
+            END
+          ), 0
+        ) AS stockIn,
+
+        COALESCE(
+          SUM(
+            CASE 
+              WHEN type = 'OUT' THEN quantity 
+              ELSE 0 
+            END
+          ), 0
+        ) AS stockOut
+
       FROM stock_movements
-      WHERE created_at >= CURRENT_DATE - INTERVAL '1 day'
+
+      WHERE branch_id = $1
+        AND created_at >= CURRENT_DATE - INTERVAL '1 day'
         AND created_at < CURRENT_DATE
     ),
 
     inventory AS (
       SELECT 
-        COALESCE(SUM(stock), 0)::int AS availableStock,
-        COUNT(CASE 
-          WHEN stock > 0 
-            AND stock <= stock_low 
-          THEN 1 
-        END)::int AS low_stocks
-      FROM products
+        COALESCE(SUM(stock), 0)::int AS "availableStock",
+
+        COUNT(
+          CASE 
+            WHEN stock > 0 
+            AND stock <= stock_low
+            THEN 1
+          END
+        )::int AS "lowStocks"
+
+      FROM branch_inventory
+
+      WHERE branch_id = $1
     )
 
     SELECT
       t.stockIn AS "stockInToday",
       t.stockOut AS "stockOutToday",
+
       (t.stockIn - y.stockIn) AS "differenceChangeStockIn",
+
       (t.stockOut - y.stockOut) AS "differenceChangeStockOut",
-      i.availableStock AS "availableStock",
-      i.low_stocks AS "lowStocks"
+
+      i."availableStock",
+      i."lowStocks"
+
     FROM today t
     CROSS JOIN yesterday y
     CROSS JOIN inventory i;
-  `);
+    `,
+    [branchId],
+  );
 
   return result.rows[0];
 };
 
-export const getDashboardChartsService = async (client) => {
-  const result = await client.query(`
+export const getDashboardChartsService = async (client, branchId) => {
+  const result = await client.query(
+    `
      WITH days AS (
         SELECT generate_series(
           CURRENT_DATE - INTERVAL '6 days',
@@ -260,17 +313,21 @@ export const getDashboardChartsService = async (client) => {
         LEFT JOIN stock_movements sm
           ON sm.created_at >= d.day
           AND sm.created_at < d.day + INTERVAL '1 day'
+          AND sm.branch_id = $1
         GROUP BY d.day
         ORDER BY d.day
       ),
 
       stock_category AS (
         SELECT
-          category AS name,
-          COALESCE(SUM(stock), 0) AS value1
-        FROM products
-        GROUP BY category
-        ORDER BY category
+          p.category AS name,
+          COALESCE(SUM(bi.stock), 0) AS value1
+        FROM products p
+        LEFT JOIN branch_inventory bi
+          ON bi.product_id = p.id
+          AND bi.branch_id = $1
+        GROUP BY p.category
+        ORDER BY p.category
       ),
       
       best_selling AS (
@@ -279,7 +336,8 @@ export const getDashboardChartsService = async (client) => {
           SUM(sm.quantity) AS value
         FROM stock_movements sm
         JOIN products p ON p.id = sm.product_id
-        WHERE sm.type = 'OUT'
+        WHERE branch_id = $1
+          AND sm.type = 'OUT'
           AND sm.created_at >= CURRENT_DATE - INTERVAL '6 days'
           AND sm.created_at < CURRENT_DATE + INTERVAL '1 day'
         GROUP BY p.product_name
@@ -302,20 +360,25 @@ export const getDashboardChartsService = async (client) => {
         LEFT JOIN stock_movements sm
           ON sm.created_at >= d.day
           AND sm.created_at < d.day + INTERVAL '1 day'
+          AND sm.branch_id = $1
         GROUP BY d.day
         ORDER BY d.day
       ),
       
       low_stock AS (
         SELECT
-          id,
-          sku,
-          product_name AS "productName",
-          stock,
-          stock_low AS "stockLow",
-          stock_critical AS "stockCritical"
-        FROM products
-        WHERE stock <= stock_low
+          p.id,
+          p.sku,
+          p.product_name AS "productName",
+          COALESCE(bi.stock, 0) AS stock,
+          COALESCE(bi.stock_low, 0) AS "stockLow",
+          COALESCE(bi.stock_critical, 0) AS "stockCritical"
+        FROM products p
+        LEFT JOIN branch_inventory bi
+          ON bi.product_id = p.id
+          AND bi.branch_id = $1
+        WHERE COALESCE(bi.stock, 0)
+          <= COALESCE(bi.stock_low, 0)
         ORDER BY stock ASC
         LIMIT 5
       ),
@@ -331,6 +394,7 @@ export const getDashboardChartsService = async (client) => {
         FROM stock_movements sm
         LEFT JOIN products p ON sm.product_id = p.id
         LEFT JOIN users u ON sm.handled_by = u.id
+        WHERE sm.branch_id = $1
         ORDER BY sm.created_at DESC
         LIMIT 5
       )
@@ -376,41 +440,49 @@ export const getDashboardChartsService = async (client) => {
           '[]'::json
         )
       ) AS data;
-    `);
+    `,
+    [branchId],
+  );
 
   return result.rows[0];
 };
 
-export const inventorySummaryStatsService = async () => {
+export const inventorySummaryStatsService = async (branchId) => {
   const query = `
     SELECT
       COUNT(*) FILTER (
-        WHERE stock > stock_low
+        WHERE COALESCE(bi.stock, 0) > COALESCE(bi.stock_low, 0)
       ) AS "inStock",
 
       COUNT(*) FILTER (
-        WHERE stock <= stock_low
-        AND stock > stock_critical
+        WHERE COALESCE(bi.stock, 0) <= COALESCE(bi.stock_low, 0)
+        AND COALESCE(bi.stock, 0) > COALESCE(bi.stock_critical, 0)
       ) AS "lowStock",
 
       COUNT(*) FILTER (
-        WHERE stock <= stock_critical
-        AND stock > 0
+        WHERE COALESCE(bi.stock, 0) <= COALESCE(bi.stock_critical, 0)
+        AND COALESCE(bi.stock, 0) > 0
       ) AS "criticalStock",
 
       COUNT(*) FILTER (
-        WHERE stock = 0
+        WHERE COALESCE(bi.stock, 0) = 0
       ) AS "outOfStock"
 
-    FROM products;
+    FROM products p
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = $1
+
+    WHERE p.status <> 'archived';
   `;
 
-  const { rows } = await pool.query(query);
+  const { rows } = await pool.query(query, [branchId]);
 
   return rows[0];
 };
 
-export const inventoryMovementSummaryStatsService = async () => {
+export const inventoryMovementSummaryStatsService = async (branchId) => {
   const query = `
     SELECT
       COUNT(id) as "totalMovements",
@@ -425,10 +497,11 @@ export const inventoryMovementSummaryStatsService = async () => {
         0
       ) AS "totalNetChange"
 
-    FROM stock_movements;
+    FROM stock_movements
+      WHERE branch_id = $1
   `;
 
-  const { rows } = await pool.query(query);
+  const { rows } = await pool.query(query, [branchId]);
 
   return rows[0];
 };
@@ -439,7 +512,6 @@ export const findStockMovementByIdService = async (id) => {
         sm.id,
         sm.type,
         sm.quantity,
-        sm.price,
         sm.reference,
         sm.before_stock AS "beforeStock",
         sm.after_stock AS "afterStock",

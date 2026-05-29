@@ -125,7 +125,7 @@ const ProductTable = () => {
             </select>
           </div>
 
-          {isAdmin && (
+          {/* {isAdmin && (
             <button
               onClick={() => setIsFormModal(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
@@ -133,7 +133,7 @@ const ProductTable = () => {
               <Plus size={18} />
               <span>Add Product</span>
             </button>
-          )}
+          )} */}
         </div>
       </div>
 

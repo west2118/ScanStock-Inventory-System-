@@ -4,9 +4,14 @@ export const cookieOptions = {
   sameSite: "strict",
 };
 
+// export const accessTokenCookie = {
+//   ...cookieOptions,
+//   maxAge: 15 * 60 * 1000,
+// };
+
 export const accessTokenCookie = {
   ...cookieOptions,
-  maxAge: 15 * 60 * 1000,
+  maxAge: 1 * 24 * 60 * 60 * 1000,
 };
 
 export const refreshTokenCookie = {

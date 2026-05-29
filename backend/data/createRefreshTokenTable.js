@@ -12,7 +12,7 @@ const createRefreshTokenTable = async () => {
 );`;
 
   try {
-    pool.query(queryText);
+    await pool.query(queryText);
     console.log("RefreshToken Table created if not exists");
   } catch (error) {
     console.log("Error creating refreshTokens table: ", error);

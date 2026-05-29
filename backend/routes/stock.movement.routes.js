@@ -15,38 +15,38 @@ const router = express.Router();
 router.post(
   "/stock-movement/in",
   verifyToken,
-  authorizeRoles("admin", "staff"),
+  authorizeRoles("admin", "branch_manager", "staff"),
   createStockMovement,
 );
 router.get(
   "/stock-movements",
   verifyToken,
-  authorizeRoles("admin", "staff"),
+  authorizeRoles("admin", "branch_manager", "staff"),
   getStockMovements,
 );
 router.get(
   "/stock-movement/:id",
   verifyToken,
-  authorizeRoles("admin", "staff"),
+  authorizeRoles("admin", "branch_manager", "staff"),
   findStockMovementById,
 );
 
 router.get(
   "/dashboard",
   verifyToken,
-  authorizeRoles("admin", "staff"),
+  authorizeRoles("admin", "branch_manager", "staff"),
   getDashboardData,
 );
 router.get(
   "/inventory/stats",
   verifyToken,
-  authorizeRoles("admin", "staff"),
+  authorizeRoles("admin", "branch_manager", "staff"),
   inventorySummaryStats,
 );
 router.get(
   "/movements/stats",
   verifyToken,
-  authorizeRoles("admin", "staff"),
+  authorizeRoles("admin", "branch_manager", "staff"),
   inventoryMovementSummaryStats,
 );
 

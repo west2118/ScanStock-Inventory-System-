@@ -51,6 +51,8 @@ export const createStockMovement = async (req, res) => {
 };
 
 export const getStockMovements = async (req, res) => {
+  const { branchId } = req.user;
+
   try {
     const { page = 1, limit = 10, search, category, type } = req.query;
 
@@ -60,6 +62,7 @@ export const getStockMovements = async (req, res) => {
       search,
       category,
       type,
+      branchId,
     });
 
     return res.status(200).json(result);
@@ -74,10 +77,14 @@ export const getStockMovements = async (req, res) => {
 
 export const getDashboardData = async (req, res) => {
   const client = await pool.connect();
+  const { branchId } = await req.user;
 
   try {
-    const summaryCards = await getDashboardSummaryCardsService(client);
-    const charts = await getDashboardChartsService(client);
+    const summaryCards = await getDashboardSummaryCardsService(
+      client,
+      branchId,
+    );
+    const charts = await getDashboardChartsService(client, branchId);
 
     res.status(200).json({
       summary: summaryCards,
@@ -94,8 +101,10 @@ export const getDashboardData = async (req, res) => {
 };
 
 export const inventorySummaryStats = async (req, res) => {
+  const { branchId } = req.user;
+
   try {
-    const result = await inventorySummaryStatsService();
+    const result = await inventorySummaryStatsService(branchId);
 
     res.status(201).json(result);
   } catch (error) {
@@ -107,8 +116,10 @@ export const inventorySummaryStats = async (req, res) => {
 };
 
 export const inventoryMovementSummaryStats = async (req, res) => {
+  const { branchId } = req.user;
+
   try {
-    const result = await inventoryMovementSummaryStatsService();
+    const result = await inventoryMovementSummaryStatsService(branchId);
 
     res.status(201).json(result);
   } catch (error) {

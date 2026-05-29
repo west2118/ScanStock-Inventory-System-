@@ -2,28 +2,25 @@ import pool from "../config/db.js";
 
 // CREATE PRODUCT
 export const createProductService = async (data) => {
-  const {
-    sku,
-    barcode,
-    product_name,
-    price,
-    category,
-    location,
-    vat_type,
+  const { sku, barcode, product_name, price, category, vat_type, status } =
+    data;
 
-    stock,
-    stock_low,
-    stock_critical,
-    stock_high,
-  } = data;
+  // Check if product name already exists
+  const existingProduct = await pool.query(
+    `SELECT * FROM products WHERE LOWER(product_name) = LOWER($1)`,
+    [product_name],
+  );
+
+  if (existingProduct.rows.length > 0) {
+    throw new Error("Product name already exists");
+  }
 
   const query = `
     INSERT INTO products (
-      sku, barcode, product_name, price, category, location,
-      vat_type, stock, stock_low, stock_critical, stock_high
+      sku, barcode, product_name, price, category, vat_type, status
     )
     VALUES (
-      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11
+      $1,$2,$3,$4,$5,$6,$7
     )
     RETURNING *;
   `;
@@ -34,12 +31,8 @@ export const createProductService = async (data) => {
     product_name,
     price,
     category,
-    location,
     vat_type || "vatable",
-    stock || 0,
-    stock_low || 10,
-    stock_critical || 5,
-    stock_high || 20,
+    status,
   ];
 
   const { rows } = await pool.query(query, values);
@@ -120,37 +113,42 @@ export const getProductsService = async ({
   search = "",
   status = "",
   category = "",
+  branchId,
 }) => {
   const offset = (page - 1) * limit;
 
-  const conditions = [`status <> 'archived'`];
-  const values = [];
-  let idx = 1;
+  const conditions = [`p.status <> 'archived'`];
+
+  const values = [branchId];
+
+  // $1 is already branchId
+  let idx = 2;
 
   /* -------------------- SEARCH -------------------- */
   if (search) {
     conditions.push(`
       (
-        product_name ILIKE $${idx}
-        OR sku ILIKE $${idx}
-        OR barcode ILIKE $${idx}
-        OR category ILIKE $${idx}
+        p.product_name ILIKE $${idx}
+        OR p.sku ILIKE $${idx}
+        OR p.barcode ILIKE $${idx}
+        OR p.category ILIKE $${idx}
       )
     `);
+
     values.push(`%${search}%`);
     idx++;
   }
 
   /* -------------------- STATUS FILTER -------------------- */
   if (status) {
-    conditions.push(`status = $${idx}`);
+    conditions.push(`p.status = $${idx}`);
     values.push(status);
     idx++;
   }
 
   /* -------------------- CATEGORY FILTER -------------------- */
   if (category) {
-    conditions.push(`category = $${idx}`);
+    conditions.push(`p.category = $${idx}`);
     values.push(category);
     idx++;
   }
@@ -161,7 +159,12 @@ export const getProductsService = async ({
   const totalResult = await pool.query(
     `
     SELECT COUNT(*)::int AS total
-    FROM products
+    FROM products p
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = $1
+
     ${whereClause}
     `,
     values,
@@ -174,25 +177,38 @@ export const getProductsService = async ({
   const result = await pool.query(
     `
     SELECT
-      id,
-      sku,
-      barcode,
-      product_name AS "productName",
-      price,
-      category,
-      status,
-      location,
-      vat_type AS "vatType",
-      stock,
-      stock_low AS "stockLow",
-      stock_critical AS "stockCritical",
-      stock_high AS "stockHigh",
-      created_at AS "createdAt",
-      updated_at AS "updatedAt"
-    FROM products
+      p.id,
+      p.sku,
+      p.barcode,
+      p.product_name AS "productName",
+      p.price,
+      p.category,
+      p.status,
+      p.vat_type AS "vatType",
+
+      bi.branch_id AS "branchId",
+      bi.location,
+
+      COALESCE(bi.stock, 0) AS stock,
+      COALESCE(bi.stock_low, 0) AS "stockLow",
+      COALESCE(bi.stock_critical, 0) AS "stockCritical",
+      COALESCE(bi.stock_high, 0) AS "stockHigh",
+
+      p.created_at AS "createdAt",
+      p.updated_at AS "updatedAt"
+
+    FROM products p
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = $1
+
     ${whereClause}
-    ORDER BY created_at DESC
-    LIMIT $${idx} OFFSET $${idx + 1}
+
+    ORDER BY p.created_at DESC
+
+    LIMIT $${idx}
+    OFFSET $${idx + 1}
     `,
     [...values, limit, offset],
   );
@@ -252,9 +268,10 @@ export const productSummaryStatsService = async () => {
       ) AS "noSalesLast7Days",
       (
         SELECT COUNT(*)
-        FROM products
-        WHERE status <> 'archived'
-          AND stock <= stock_low
+        FROM products p
+        JOIN branch_inventory bi ON bi.product_id = p.id
+        WHERE p.status <> 'archived'
+          AND bi.stock <= stock_low
       ) AS "lowStockProducts"
   `;
 
@@ -263,96 +280,123 @@ export const productSummaryStatsService = async () => {
   return rows[0];
 };
 
-export const findProductByIdService = async (id) => {
+export const findProductByIdService = async (id, branchId) => {
   const query = `
-      SELECT 
-        id,
-        sku,
-        barcode,
-        product_name AS "productName",
-        price,
-        category,
-        status,
-        location,
-        vat_type AS "vatType",
-        stock,
-        stock_low AS "stockLow",
-        stock_critical AS "stockCritical",
-        stock_high AS "stockHigh",
-        created_at AS "createdAt",
-        updated_at AS "updatedAt"
-      FROM products
-      WHERE id = $1
-    `;
+    SELECT 
+      p.id,
+      p.sku,
+      p.barcode,
+      p.product_name AS "productName",
+      p.price,
+      p.category,
+      p.status,
+      p.vat_type AS "vatType",
 
-  const { rows } = await pool.query(query, [id]);
+      bi.branch_id AS "branchId",
+      bi.location,
+
+      COALESCE(bi.stock, 0) AS stock,
+      COALESCE(bi.stock_low, 0) AS "stockLow",
+      COALESCE(bi.stock_critical, 0) AS "stockCritical",
+      COALESCE(bi.stock_high, 0) AS "stockHigh",
+
+      p.created_at AS "createdAt",
+      p.updated_at AS "updatedAt"
+
+    FROM products p
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = $2
+
+    WHERE p.id = $1
+  `;
+
+  const { rows } = await pool.query(query, [id, branchId]);
 
   return rows[0];
 };
 
 export const updateProductStockService = async ({
+  client,
   id,
+  branchId,
   action,
   quantity,
   notes,
-  handledBy, // ✅ REQUIRED
-  price, // ✅ REQUIRED
+  handledBy,
 }) => {
-  const client = await pool.connect();
-
   try {
-    await client.query("BEGIN");
-
-    // 🔍 Get current product
-    const productRes = await client.query(
-      `SELECT id, stock FROM products 
-       WHERE id = $1 AND status <> 'archived'`,
-      [id],
+    const inventoryRes = await client.query(
+      `
+      SELECT *
+      FROM branch_inventory
+      WHERE product_id = $1
+      AND branch_id = $2
+      `,
+      [id, branchId],
     );
 
-    if (productRes.rowCount === 0) {
-      await client.query("ROLLBACK");
-      return null;
+    let inventory;
+
+    if (inventoryRes.rowCount === 0) {
+      const createInventoryRes = await client.query(
+        `
+        INSERT INTO branch_inventory (
+          branch_id,
+          product_id,
+          stock
+        )
+        VALUES ($1, $2, 0)
+        RETURNING *
+        `,
+        [branchId, id],
+      );
+
+      inventory = createInventoryRes.rows[0];
+    } else {
+      inventory = inventoryRes.rows[0];
     }
 
-    const product = productRes.rows[0];
-
-    const beforeStock = product.stock; // ✅ capture before
+    const beforeStock = inventory.stock;
     let afterStock = beforeStock;
 
-    // 🔥 Compute new stock
+    // 🔥 Compute stock
     if (action === "IN") {
       afterStock += quantity;
     } else if (action === "OUT") {
       if (quantity > beforeStock) {
         throw new Error("Insufficient stock");
       }
+
       afterStock -= quantity;
     } else {
       throw new Error("Invalid action type");
     }
 
-    // 📝 Update product stock
+    // 📝 Update inventory stock
     const updateRes = await client.query(
       `
-      UPDATE products
-      SET stock = $1,
-          updated_at = NOW()
-      WHERE id = $2
+      UPDATE branch_inventory
+      SET
+        stock = $1,
+        updated_at = NOW()
+      WHERE product_id = $2
+      AND branch_id = $3
       RETURNING *
       `,
-      [afterStock, id],
+      [afterStock, id, branchId],
     );
 
-    // 📦 Log movement (FIXED)
+    // 📦 Log movement
     await client.query(
       `
       INSERT INTO stock_movements (
         handled_by,
         product_id,
+        branch_id,
         type,
         quantity,
-        price,
         before_stock,
         after_stock,
         reference
@@ -362,22 +406,81 @@ export const updateProductStockService = async ({
       [
         handledBy,
         id,
+        branchId,
         action,
         quantity,
-        price,
-        beforeStock, // ✅ correct before
-        afterStock, // ✅ correct after
+        beforeStock,
+        afterStock,
         notes || null,
       ],
     );
 
-    await client.query("COMMIT");
-
     return updateRes.rows[0];
   } catch (error) {
-    await client.query("ROLLBACK");
     throw error;
-  } finally {
-    client.release();
   }
+};
+
+export const getProductsPOSService = async (branchId, search = "") => {
+  console.log("BranchID: ", branchId);
+
+  const values = [branchId];
+  let idx = 2;
+
+  const conditions = [`p.status = 'active'`];
+
+  /* -------------------- SEARCH -------------------- */
+  if (search) {
+    conditions.push(`
+      (
+        p.product_name ILIKE $${idx}
+        OR p.sku ILIKE $${idx}
+        OR p.barcode ILIKE $${idx}
+        OR p.category ILIKE $${idx}
+      )
+    `);
+
+    values.push(`%${search}%`);
+    idx++;
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const result = await pool.query(
+    `
+    SELECT
+      p.id,
+      p.sku,
+      p.barcode,
+      p.product_name AS "productName",
+      p.price,
+      p.category,
+      p.status,
+      p.vat_type AS "vatType",
+
+      bi.branch_id AS "branchId",
+      bi.location,
+
+      COALESCE(bi.stock, 0) AS stock,
+      COALESCE(bi.stock_low, 0) AS "stockLow",
+      COALESCE(bi.stock_critical, 0) AS "stockCritical",
+      COALESCE(bi.stock_high, 0) AS "stockHigh",
+
+      p.created_at AS "createdAt",
+      p.updated_at AS "updatedAt"
+
+    FROM products p
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = $1
+
+    ${whereClause}
+
+    ORDER BY product_name ASC
+    `,
+    values,
+  );
+
+  return result.rows;
 };

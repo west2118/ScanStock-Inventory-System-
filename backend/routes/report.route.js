@@ -5,6 +5,11 @@ import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();
 
-router.get("/reports", verifyToken, authorizeRoles("admin"), getReports);
+router.get(
+  "/reports",
+  verifyToken,
+  authorizeRoles("admin", "branch_manager"),
+  getReports,
+);
 
 export default router;
