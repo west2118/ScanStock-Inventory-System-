@@ -33,12 +33,6 @@ const ProductListedCard = ({
     >
       <div className="flex items-start justify-between mb-2">
         <Package size={20} className="text-blue-500" />
-        {/* {product.stock <= product.stock * 0.2 && product.stock > 0 && (
-          <span className="text-xs text-red-500">Low Stock</span>
-        )}
-        {product.stock === 0 && (
-          <span className="text-xs text-gray-400">Out of Stock</span>
-        )} */}
       </div>
       <p className="font-semibold text-gray-900 text-sm">
         {product.productName}

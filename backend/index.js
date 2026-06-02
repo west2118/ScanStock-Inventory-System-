@@ -12,6 +12,7 @@ import stockMovementRoutes from "./routes/stock.movement.routes.js";
 import reportRoutes from "./routes/report.route.js";
 import branchRoutes from "./routes/branch.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 import createProductTable from "./data/createProductTable.js";
 import createStockMovementTable from "./data/createStockMovement.js";
@@ -41,6 +42,8 @@ app.use("/api", stockMovementRoutes);
 app.use("/api", reportRoutes);
 app.use("/api", branchRoutes);
 app.use("/api", transactionRoutes);
+
+app.use("/api", dashboardRoutes);
 
 // Create table before starting server
 createBranchInventoryTable();

@@ -12,7 +12,7 @@ type ListedProductsProps = {
   addItem: (item: ProductType) => void;
 };
 
-const ListedProducts = ({ addItem, setItems, items }: ListedProductsProps) => {
+const ListedProducts = ({ addItem, items }: ListedProductsProps) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounceInput(search);
 

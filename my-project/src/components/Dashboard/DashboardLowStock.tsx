@@ -31,9 +31,6 @@ const DashboardLowStock = ({ data }: DashboardLowStockProps) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Product
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                SKU
-              </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Current
               </th>
@@ -48,11 +45,13 @@ const DashboardLowStock = ({ data }: DashboardLowStockProps) => {
           <tbody className="divide-y divide-gray-100">
             {data.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {item.productName}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {item.sku}
+                <td className="px-6 py-4 text-sm">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">
+                      {item.productName}
+                    </span>
+                    <span className="text-xs text-gray-500">{item.sku}</span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-center font-bold text-red-600">
                   {item.stock}

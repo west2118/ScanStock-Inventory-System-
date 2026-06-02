@@ -57,6 +57,8 @@ export const getReportsService = async (
 export const getOverviewReportService = async (params) => {
   const client = await pool.connect();
 
+  console.log("Reports: ", params);
+
   try {
     const [revenueTrend, stockMovements, categoryPerformance, lowStock] =
       await Promise.all([

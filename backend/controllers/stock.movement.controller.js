@@ -1,9 +1,8 @@
 import pool from "../config/db.js";
+import { getDashboardSummaryStatsService } from "../services/dashboard.service.js";
 import {
   createStockMovementService,
   findStockMovementByIdService,
-  getDashboardChartsService,
-  getDashboardSummaryCardsService,
   getStockMovementsService,
   inventoryMovementSummaryStatsService,
   inventorySummaryStatsService,
@@ -72,31 +71,6 @@ export const getStockMovements = async (req, res) => {
     return res.status(500).json({
       message: "Failed to fetch stock movements",
     });
-  }
-};
-
-export const getDashboardData = async (req, res) => {
-  const client = await pool.connect();
-  const { branchId } = await req.user;
-
-  try {
-    const summaryCards = await getDashboardSummaryCardsService(
-      client,
-      branchId,
-    );
-    const charts = await getDashboardChartsService(client, branchId);
-
-    res.status(200).json({
-      summary: summaryCards,
-      charts: charts.data,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Failed to fetch dashboard data",
-    });
-  } finally {
-    client.release();
   }
 };
 

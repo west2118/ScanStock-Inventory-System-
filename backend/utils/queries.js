@@ -208,8 +208,27 @@ export const getTimeSeriesQuery = (metric) => {
   };
 
   const joinItems =
-    metric === "items"
-      ? "LEFT JOIN transaction_items ti ON ti.transaction_id = sm.id"
+    metric !== "revenue"
+      ? `LEFT JOIN stock_movements sm
+    ON sm.created_at >= s.slot
+    AND sm.branch_id = $5
+    AND sm.created_at <
+      CASE
+        WHEN $1 = 'range'
+          THEN s.period_end
+        ELSE s.slot +
+          CASE
+            WHEN $1 = 'daily' THEN INTERVAL '1 hour'
+            WHEN $1 = 'weekly' THEN INTERVAL '1 day'
+            WHEN $1 = 'monthly' THEN
+              LEAST(
+                slot + INTERVAL '1 week',
+                DATE_TRUNC('month', slot) + INTERVAL '1 month'
+              ) - slot
+            WHEN $1 = 'quarterly' THEN INTERVAL '1 month'
+            WHEN $1 = 'yearly' THEN INTERVAL '1 month'
+          END
+      END`
       : "";
 
   return `
@@ -421,26 +440,7 @@ export const getTimeSeriesQuery = (metric) => {
           END
       END
 
-  LEFT JOIN stock_movements sm
-    ON sm.created_at >= s.slot
-    AND sm.branch_id = $5
-    AND sm.created_at <
-      CASE
-        WHEN $1 = 'range'
-          THEN s.period_end
-        ELSE s.slot +
-          CASE
-            WHEN $1 = 'daily' THEN INTERVAL '1 hour'
-            WHEN $1 = 'weekly' THEN INTERVAL '1 day'
-            WHEN $1 = 'monthly' THEN
-              LEAST(
-                slot + INTERVAL '1 week',
-                DATE_TRUNC('month', slot) + INTERVAL '1 month'
-              ) - slot
-            WHEN $1 = 'quarterly' THEN INTERVAL '1 month'
-            WHEN $1 = 'yearly' THEN INTERVAL '1 month'
-          END
-      END
+ 
 
   ${joinItems}
 

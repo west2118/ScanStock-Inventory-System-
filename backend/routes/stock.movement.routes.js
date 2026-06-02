@@ -2,7 +2,6 @@ import express from "express";
 import {
   createStockMovement,
   findStockMovementById,
-  getDashboardData,
   getStockMovements,
   inventoryMovementSummaryStats,
   inventorySummaryStats,
@@ -29,13 +28,6 @@ router.get(
   verifyToken,
   authorizeRoles("admin", "branch_manager", "staff"),
   findStockMovementById,
-);
-
-router.get(
-  "/dashboard",
-  verifyToken,
-  authorizeRoles("admin", "branch_manager", "staff"),
-  getDashboardData,
 );
 router.get(
   "/inventory/stats",

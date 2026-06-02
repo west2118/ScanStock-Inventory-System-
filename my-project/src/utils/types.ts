@@ -103,3 +103,56 @@ export type TransactionType = {
   voidedBy: string;
   voidedAt: string;
 };
+
+export type DashboardSummaryType = {
+  availableStock: number;
+  differenceChangeStockIn: number;
+  differenceChangeStockOut: number;
+  lowStocks: number;
+  stockInToday: number;
+  stockOutToday: number;
+};
+
+export type DashboardChartsType = {
+  dateRange: string;
+  weeklyStockMovement: {
+    date: string;
+    label: string;
+    value1: number;
+    value2: number;
+  }[];
+  stockCategory: {
+    name: string;
+    value1: number;
+  }[];
+  bestSellingProducts: {
+    name: string;
+    value: number;
+  }[];
+  netChange: {
+    date: string;
+    label: string;
+    value: number;
+  }[];
+  lowStock: {
+    id: number;
+    sku: string;
+    productName: string;
+    stock: number;
+    stockCritical: number;
+    stockLow: number;
+  }[];
+  recentMovements: {
+    id: number;
+    createdAt: string;
+    handledBy: string;
+    productName: string;
+    quantity: number;
+    type: string;
+  }[];
+};
+
+export type DashboardDataType = {
+  summary: DashboardSummaryType;
+  charts: DashboardChartsType;
+};

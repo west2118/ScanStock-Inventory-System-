@@ -15,7 +15,7 @@ const POSPage = () => {
   } = useCart();
 
   return (
-    <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
+    <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 bg-white">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Products Grid */}
         <ListedProducts addItem={addItem} setItems={setItems} items={items} />
