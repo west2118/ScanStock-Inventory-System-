@@ -23,3 +23,5 @@ const createProductImagesTable = async () => {
 };
 
 export default createProductImagesTable;
+
+// Fixing
