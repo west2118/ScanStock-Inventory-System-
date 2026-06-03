@@ -5,7 +5,7 @@ import {
   getStockMovements,
   inventoryMovementSummaryStats,
   inventorySummaryStats,
-} from "../controllers/stock.movement.controller.js";
+} from "../controllers/v1/stock.movement.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authRole.js";
 

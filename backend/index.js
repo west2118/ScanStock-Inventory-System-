@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/db.js";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import compression from "compression";
 
 dotenv.config();
 
@@ -13,6 +15,8 @@ import reportRoutes from "./routes/report.route.js";
 import branchRoutes from "./routes/branch.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import categoryRoutes from "./routes/category.routes.js";
+import brandRoutes from "./routes/brand.routes.js";
 
 import createProductTable from "./data/createProductTable.js";
 import createStockMovementTable from "./data/createStockMovement.js";
@@ -22,9 +26,21 @@ import createTransactionTable from "./data/createTransactionTable.js";
 import createTransactionItemTable from "./data/createTransactionItemTable.js";
 import createUserTable from "./data/createUserTable.js";
 import createRefreshTokenTable from "./data/createRefreshTokenTable.js";
+import createBrandTable from "./data/createBrandTable.js";
+import createCategoryTable from "./data/createCategory.js";
+import createProductImagesTable from "./data/createProductImages.js";
+import createProductSpecificationsTable from "./data/createProductSpecification.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
+import { apiLimiter } from "./utils/apiLimiter.js";
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  }),
+);
 
 app.use(cookieParser());
 app.use(express.json());
@@ -34,6 +50,9 @@ app.use(
     credentials: true,
   }),
 );
+app.use(compression());
+
+app.use("/api", apiLimiter);
 
 // Routes
 app.use("/api", authRoutes);
@@ -43,17 +62,26 @@ app.use("/api", reportRoutes);
 app.use("/api", branchRoutes);
 app.use("/api", transactionRoutes);
 
+app.use("/api", categoryRoutes);
+app.use("/api", brandRoutes);
+
 app.use("/api", dashboardRoutes);
 
+app.use(errorHandler);
+
 // Create table before starting server
-createBranchInventoryTable();
-createProductTable();
+// createBranchInventoryTable();
+// createProductTable();
 // createBranchTable();
 // createUserTable();
 // createRefreshTokenTable();
 // createStockMovementTable();
-createTransactionTable();
-createTransactionItemTable();
+// createTransactionTable();
+// createTransactionItemTable();
+// createBrandTable();
+createCategoryTable();
+// createProductImagesTable();
+// createProductSpecificationsTable();
 
 // Testing postgres
 app.get("/", async (req, res) => {

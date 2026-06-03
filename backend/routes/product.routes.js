@@ -9,7 +9,7 @@ import {
   findProductById,
   updateProductStock,
   getProductsPOS,
-} from "../controllers/product.controller.js";
+} from "../controllers/v1/product.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authRole.js";
 

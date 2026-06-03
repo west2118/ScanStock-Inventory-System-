@@ -5,7 +5,7 @@ import {
   refresh,
   register,
   me,
-} from "../controllers/auth.controllers.js";
+} from "../controllers/v1/auth.controllers.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();

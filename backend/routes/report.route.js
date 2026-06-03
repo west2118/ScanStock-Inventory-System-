@@ -1,5 +1,5 @@
 import express from "express";
-import { getReports } from "../controllers/report.controller.js";
+import { getReports } from "../controllers/v1/report.controller.js";
 import { authorizeRoles } from "../middlewares/authRole.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 
