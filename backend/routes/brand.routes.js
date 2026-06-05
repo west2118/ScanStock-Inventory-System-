@@ -9,7 +9,10 @@ import {
   updateBrand,
 } from "../controllers/v2/brands.controller.js";
 import { validate } from "../middlewares/validate.js";
-import { createBrandSchema } from "../validations/brand.validation.js";
+import {
+  createBrandSchema,
+  updateBrandSchema,
+} from "../validations/brand.validation.js";
 
 const router = express.Router();
 
@@ -17,6 +20,6 @@ router.post("/brands", validate(createBrandSchema), createBrand);
 router.get("/brands", getBrands);
 router.get("/brands/:id", getBrandById);
 router.put("/brands/:id/delete", deleteBrand);
-router.put("/brands/:id", validate(createBrandSchema), updateBrand);
+router.put("/brands/:id", validate(updateBrandSchema), updateBrand);
 
 export default router;

@@ -196,7 +196,6 @@ export const getStockMovementsService = async ({
   };
 };
 
-
 export const inventorySummaryStatsService = async (branchId) => {
   const query = `
     SELECT

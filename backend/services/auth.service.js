@@ -11,44 +11,89 @@ import { hashToken } from "../utils/hash.js";
 
 dotenv.config();
 
-export const registerService = async (
-  name,
-  username,
-  role,
-  status,
+export const registerService = async ({
+  branchId = null,
+  firstName,
+  lastName,
+  email,
   password,
-  branchId,
-) => {
-  const hash = await bcrypt.hash(password, 10);
+  role = "customer",
+  status = "active",
+}) => {
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   const result = await pool.query(
-    `INSERT INTO users(username, password, name, role, status, branch_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [username, hash, name, role, status, branchId],
+    `
+      INSERT INTO users (
+        branch_id,
+        first_name,
+        last_name,
+        email,
+        password,
+        role,
+        status
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING
+        id,
+        branch_id,
+        first_name,
+        last_name,
+        email,
+        role,
+        status,
+        email_verified,
+        created_at
+    `,
+    [
+      branchId,
+      firstName,
+      lastName,
+      email.toLowerCase(),
+      hashedPassword,
+      role,
+      status,
+    ],
   );
 
   return result.rows[0];
 };
 
-export const loginService = async ({ username, password }) => {
-  const { rows } = await pool.query("SELECT * FROM users WHERE username = $1", [
-    username,
+export const loginService = async ({ email, password }) => {
+  const { rows } = await pool.query("SELECT * FROM users WHERE email = $1", [
+    email,
   ]);
 
   const user = rows[0];
-  if (!user) throw new Error("Invalid credentials");
+  if (!user) throw new Error("Invalid email or password");
 
   const match = await bcrypt.compare(password, user.password);
-  if (!match) throw new Error("Password not matched!");
+  if (!match) throw new Error("Invalid email or password");
+
+  if (user.status !== "active") {
+    throw new Error("Account is inactive");
+  }
+
+  await pool.query(
+    `
+    UPDATE users
+    SET last_login_at = NOW()
+    WHERE id = $1
+    `,
+    [user.id],
+  );
 
   const accessToken = createAccessToken({
     id: user.id,
     role: user.role,
-    name: user.name,
     branchId: user.branch_id,
   });
-  const refreshToken = createRefreshToken(user);
 
-  const hash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+  const refreshToken = createRefreshToken({
+    id: user.id,
+  });
+
+  const hash = hashToken(refreshToken);
 
   await pool.query(
     `INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1,$2,NOW() + INTERVAL '7 days')`,
@@ -61,29 +106,9 @@ export const loginService = async ({ username, password }) => {
     user: {
       id: user.id,
       role: user.role,
-      name: user.name,
       branchId: user.branch_id,
     },
   };
-};
-
-export const refreshTokenService = async (refreshToken) => {
-  const payload = verifyRefreshToken(refreshToken);
-  const hash = hashToken(refreshToken);
-
-  const { rows } = await pool.query(
-    "SELECT * FROM refresh_tokens WHERE token_hash=$1 AND revoked=false",
-    [hash],
-  );
-
-  if (!rows.length) throw new Error("Invalid refresh token");
-
-  return createAccessToken({
-    id: payload.id,
-    role: payload.role,
-    name: payload.name,
-    branchId: payload.branchId,
-  });
 };
 
 export const revokeRefreshTokenService = async (refreshToken) => {
@@ -94,13 +119,105 @@ export const revokeRefreshTokenService = async (refreshToken) => {
     [hash],
   );
 };
+
+export const refreshTokenService = async (refreshToken) => {
+  const payload = verifyRefreshToken(refreshToken);
+  const oldHash = hashToken(refreshToken);
+
+  const { rows } = await pool.query(
+    `
+    SELECT *
+    FROM refresh_tokens
+    WHERE token_hash = $1
+      AND revoked = false
+      AND expires_at > NOW()
+    `,
+    [oldHash],
+  );
+
+  if (!rows.length) {
+    throw new Error("Invalid refresh token");
+  }
+
+  // Revoke old refresh token
+  await pool.query(
+    `
+    UPDATE refresh_tokens
+    SET revoked = true
+    WHERE token_hash = $1
+    `,
+    [oldHash],
+  );
+
+  // GET LATEST USER DATA FROM DATABASE
+  const { rows: userRows } = await pool.query(
+    `
+    SELECT
+      id,
+      role,
+      branch_id,
+      status
+    FROM users
+    WHERE id = $1
+    `,
+    [payload.id],
+  );
+
+  const user = userRows[0];
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.status !== "active") {
+    throw new Error("Account is inactive");
+  }
+
+  // CREATE NEW ACCESS TOKEN USING CURRENT DATABASE DATA
+  const newAccessToken = createAccessToken({
+    id: user.id,
+    role: user.role,
+    branchId: user.branch_id,
+  });
+
+  // CREATE NEW REFRESH TOKEN
+  const newRefreshToken = createRefreshToken({
+    id: user.id,
+  });
+
+  const newHash = hashToken(newRefreshToken);
+
+  await pool.query(
+    `
+    INSERT INTO refresh_tokens (
+      user_id,
+      token_hash,
+      expires_at
+    )
+    VALUES (
+      $1,
+      $2,
+      NOW() + INTERVAL '7 days'
+    )
+    `,
+    [user.id, newHash],
+  );
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
+};
+
 export const meService = async (userId) => {
   const { rows } = await pool.query(
     `
     SELECT 
       id,
       role,
-      name,
+      first_name AS "firstName",
+      last_name AS "lastName",
+      email,
       branch_id AS "branchId"
     FROM users
     WHERE id = $1

@@ -12,6 +12,7 @@ const createProductTable = async () => {
       product_name VARCHAR(255) NOT NULL,
       short_description TEXT,
       description TEXT,
+      features TEXT,
 
       price NUMERIC(12,2) NOT NULL,
 

@@ -1,17 +1,19 @@
 import express from "express";
+import { verifyToken } from "../middlewares/verifyToken.js";
+import { validate } from "../middlewares/validate.js";
+import { loginSchema, registerSchema } from "../validations/user.validation.js";
 import {
+  register,
   login,
   logout,
   refresh,
-  register,
   me,
-} from "../controllers/v1/auth.controllers.js";
-import { verifyToken } from "../middlewares/verifyToken.js";
+} from "../controllers/v2/auth.controller.js";
 
 const router = express.Router();
 
-router.post("/register", register);
-router.post("/login", login);
+router.post("/register", validate(registerSchema), register);
+router.post("/login", validate(loginSchema), login);
 router.post("/refresh", refresh);
 router.post("/logout", logout);
 router.get("/me", verifyToken, me);

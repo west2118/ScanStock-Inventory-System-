@@ -1,166 +1,81 @@
+import { asyncHandler } from "../../utils/helper.js";
+import pool from "../../config/db.js";
 import {
   createProductService,
-  updateProductService,
-  deleteProductService,
+  getProductByIdService,
   getProductsService,
-} from "../services/product.service.js";
-import pool from "../config/db.js";
-import { findProductByIdService } from "../services/product.service.js";
-import { getProductSummaryStatsService } from "../services/product.service.js";
+  updateProductService,
+} from "../../services/product.service.js";
 
-// CREATE
-export const createProduct = async (req, res) => {
-  try {
-    const product = await createProductService(req.body);
+// CREATE PRODUCT
+export const createProduct = asyncHandler(async (req, res) => {
+  const product = await createProductService(req.validatedBody);
 
-    return res.status(201).json({
-      success: true,
-      message: "Product created successfully",
-      data: product,
-    });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: formatZodErrors(error),
-      });
-    }
+  return res.status(201).json({
+    success: true,
+    message: "Product created successfully",
+    data: product,
+  });
+});
 
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Failed to create product",
-    });
+// UPDATE PRODUCT
+export const updateProduct = asyncHandler(async (req, res) => {
+  const product = await updateProductService(req.params.id, req.validatedBody);
+
+  if (!product) {
+    const error = new Error("Product not found");
+    error.statusCode = 404;
+    throw error;
   }
-};
 
-// UPDATE
-export const updateProduct = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: "Product updated successfully",
+    data: product,
+  });
+});
+
+// DELETE PRODUCT
+export const deleteProduct = asyncHandler(async (req, res) => {
+  const product = await deleteProductService(req.params.id);
+
+  if (!product) {
+    const error = new Error("Product not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Product deleted successfully",
+  });
+});
+
+// GET PRODUCTS
+export const getProducts = asyncHandler(async (req, res) => {
+  const products = await getProductsService({
+    page: Number(req.query.page) || 1,
+    limit: Number(req.query.limit) || 10,
+    search: req.query.search,
+    categoryId: req.query.categoryId ? Number(req.query.categoryId) : undefined,
+    brandId: req.query.brandId ? Number(req.query.brandId) : undefined,
+    status: req.query.status,
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: products,
+  });
+});
+
+// GET PRODUCT BY ID
+export const getProductById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  try {
-    const updated = await updateProductService(id, req.body);
+  const product = await getProductByIdService(Number(id));
 
-    if (!updated) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Product updated successfully",
-      data: updated,
-    });
-  } catch (error) {
-    console.log(error);
-    if (error.name === "ZodError") {
-      return res.status(400).json({
-        success: false,
-        errors: error.errors,
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to update product",
-    });
-  }
-};
-
-// DELETE
-export const deleteProduct = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const deleted = await deleteProductService(id);
-
-    console.log("Deleted: ", deleted);
-
-    if (!deleted) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Product deleted successfully",
-      data: deleted,
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete product",
-    });
-  }
-};
-
-// GET
-export const getProducts = async (req, res) => {
-  const client = await pool.connect();
-
-  try {
-    const { page = 1, limit = 10, search, category, status } = req.query;
-
-    const result = await getProductsService(client, {
-      page: Number(page),
-      limit: Number(limit),
-      search,
-      category,
-      status,
-    });
-
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error(error.message);
-
-    return res.status(500).json({
-      message: "Failed to fetch products",
-    });
-  } finally {
-    client.release();
-  }
-};
-
-// GET
-export const findProductById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const product = await findProductByIdService(id);
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    return res.json(product);
-  } catch (error) {
-    console.error("🔥 ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Failed to fetch product",
-    });
-  }
-};
-
-// --------- FIXING THE ESSENTIAL FIRST!----------
-export const getProductsSummaryStats = async (req, res) => {
-  try {
-    const summaryStats = await getProductSummaryStatsService();
-    return res.status(200).json(summaryStats);
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch products",
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    data: product,
+  });
+});

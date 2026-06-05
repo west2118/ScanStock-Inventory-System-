@@ -2,227 +2,465 @@ import pool from "../config/db.js";
 
 // CREATE PRODUCT
 export const createProductService = async (data) => {
-  const { sku, barcode, productName, price, category, vatType, status, brand } =
-    data;
+  const client = await pool.connect();
 
-  // Check if product name already exists
-  const existingProduct = await pool.query(
-    `SELECT * FROM products WHERE LOWER(product_name) = LOWER($1) AND LOWER(brand) = LOWER($2)`,
-    [product_name, brand],
-  );
+  try {
+    await client.query("BEGIN");
 
-  if (existingProduct.rows.length > 0) {
-    throw new Error("Product with same brand already exists");
+    const existingProduct = await client.query(
+      `
+        SELECT id
+        FROM products
+        WHERE LOWER(product_name) = LOWER($1)
+          AND brand_id = $2
+        LIMIT 1
+      `,
+      [data.productName, data.brandId],
+    );
+
+    if (existingProduct.rowCount > 0) {
+      const error = new Error("Product already exists for this brand");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const productResult = await client.query(
+      `
+      INSERT INTO products (
+        sku,
+        barcode,
+        slug,
+        product_name,
+        short_description,
+        description,
+        features,
+        price,
+        status,
+        category_id,
+        brand_id,
+        vat_type
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
+      )
+      RETURNING *
+      `,
+      [
+        data.sku,
+        data.barcode,
+        data.slug,
+        data.productName,
+        data.shortDescription,
+        data.description,
+        data.features,
+        data.price,
+        data.status ?? "active",
+        data.categoryId,
+        data.brandId,
+        data.vatType ?? "vatable",
+      ],
+    );
+
+    const product = productResult.rows[0];
+
+    if (data.specifications.length > 0) {
+      for (const specification of data.specifications) {
+        await client.query(
+          `
+          INSERT INTO product_specifications (
+            product_id,
+            name,
+            value
+          )
+          VALUES ($1,$2,$3)
+          `,
+          [product.id, specification.name, specification.value],
+        );
+      }
+    }
+
+    if (data.images.length > 0) {
+      for (const image of data.images) {
+        await client.query(
+          `
+          INSERT INTO product_images (
+            product_id,
+            image_url,
+            sort_order,
+            is_primary
+          )
+          VALUES ($1,$2,$3,$4)
+          `,
+          [
+            product.id,
+            image.imageUrl,
+            image.sortOrder ?? 0,
+            image.isPrimary ?? false,
+          ],
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+
+    return product;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
   }
-
-  const query = `
-    INSERT INTO products (
-      sku, barcode, product_name, price, category, vat_type, status, brand
-    )
-    VALUES (
-      $1,$2,$3,$4,$5,$6,$7,$8
-    )
-    RETURNING *;
-  `;
-
-  const values = [
-    sku,
-    barcode,
-    productName,
-    price,
-    category,
-    vatType || "vatable",
-    status,
-    brand,
-  ];
-
-  const { rows } = await pool.query(query, values);
-  return rows[0];
 };
 
 // UPDATE PRODUCT
-export const updateProductService = async (id, data) => {
-  const { sku, barcode, productName, price, category, vatType, status, brand } =
-    data;
+export const updateProductService = async (productId, data) => {
+  const client = await pool.connect();
 
-  const query = `
-    UPDATE products
-    SET
-      sku = $1,
-      barcode = $2,
-      product_name = $3,
-      price = $4,
-      category = $5,
-      vat_type = $6,
-      status = $7,
-      brand = $8,
-      updated_at = NOW()
-    WHERE id = $9
-    RETURNING *;
-  `;
+  try {
+    await client.query("BEGIN");
 
-  const values = [
-    sku,
-    barcode,
-    productName,
-    price,
-    category,
-    vatType,
-    status,
-    brand,
-    id,
-  ];
+    const existingProduct = await client.query(
+      `
+      SELECT id
+      FROM products
+      WHERE
+        LOWER(product_name) = LOWER($1)
+        AND brand_id = $2
+        AND id <> $3
+      `,
+      [data.productName, data.brandId, productId],
+    );
 
-  const { rows } = await pool.query(query, values);
-  return rows[0];
+    if (existingProduct.rowCount > 0) {
+      throw new Error("A product with this name already exists for this brand");
+    }
+
+    const productResult = await client.query(
+      `
+      UPDATE products
+      SET
+        sku = $1,
+        barcode = $2,
+        slug = $3,
+        product_name = $4,
+        short_description = $5,
+        description = $6,
+        features = $7,
+        price = $8,
+        status = $9,
+        category_id = $10,
+        brand_id = $11,
+        vat_type = $12,
+        updated_at = NOW()
+      WHERE id = $13
+      RETURNING *
+      `,
+      [
+        data.sku,
+        data.barcode,
+        data.slug,
+        data.productName,
+        data.shortDescription,
+        data.description,
+        data.features,
+        data.price,
+        data.status ?? "active",
+        data.categoryId,
+        data.brandId,
+        data.vatType ?? "vatable",
+        productId,
+      ],
+    );
+
+    if (productResult.rowCount === 0) {
+      throw new Error("Product not found");
+    }
+
+    const product = productResult.rows[0];
+
+    await client.query(
+      `
+      DELETE FROM product_specifications
+      WHERE product_id = $1
+      `,
+      [productId],
+    );
+
+    await client.query(
+      `
+      DELETE FROM product_images
+      WHERE product_id = $1
+      `,
+      [productId],
+    );
+
+    if (data.specifications.length > 0) {
+      for (const specification of data.specifications) {
+        await client.query(
+          `
+          INSERT INTO product_specifications (
+            product_id,
+            name,
+            value
+          )
+          VALUES ($1,$2,$3)
+          `,
+          [product.id, specification.name, specification.value],
+        );
+      }
+    }
+
+    if (data.images.length > 0) {
+      for (const image of data.images) {
+        await client.query(
+          `
+          INSERT INTO product_images (
+            product_id,
+            image_url,
+            sort_order,
+            is_primary
+          )
+          VALUES ($1,$2,$3,$4)
+          `,
+          [
+            product.id,
+            image.imageUrl,
+            image.sortOrder ?? 0,
+            image.isPrimary ?? false,
+          ],
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+
+    return product;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 // DELETE PRODUCT
-export const deleteProductService = async (id) => {
-  const query = `
+export const deleteProductService = async (productId) => {
+  const result = await pool.query(
+    `
     UPDATE products
-    SET status = 'archived'
+    SET
+      status = 'archived',
+      updated_at = NOW()
     WHERE id = $1
-    RETURNING *;
-  `;
+    RETURNING id
+    `,
+    [productId],
+  );
 
-  const { rows } = await pool.query(query, [id]);
-  return rows[0];
-};
+  if (result.rowCount === 0) {
+    const error = new Error("Product not found");
+    error.statusCode = 404;
+    throw error;
+  }
 
-export const findProductByIdService = async (id) => {
-  const query = `
-    SELECT 
-      p.id,
-      p.sku,
-      p.barcode,
-      p.product_name AS "productName",
-      p.price,
-      p.category,
-      p.status,
-      p.vat_type AS "vatType",
-      p.brand,
-
-      p.created_at AS "createdAt",
-      p.updated_at AS "updatedAt"
-
-    FROM products p
-
-    WHERE p.id = $1
-  `;
-
-  const { rows } = await pool.query(query, [id]);
-
-  return rows[0];
+  return true;
 };
 
 // GET PRODUCTS
-export const getProductsService = async (
-  client,
-  { page = 1, limit = 10, search, status, category },
-) => {
+export const getProductsService = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+  status,
+  categoryId,
+  brandId,
+}) => {
   const offset = (page - 1) * limit;
 
-  const conditions = [`p.status <> 'archived'`];
   const values = [];
-  let idx = 1;
+  const conditions = [];
 
-  /* -------------------- SEARCH -------------------- */
+  let paramCount = 1;
+
   if (search) {
     conditions.push(`
       (
-        p.product_name ILIKE $${idx}
-        OR p.sku ILIKE $${idx}
-        OR p.barcode ILIKE $${idx}
-        OR p.category ILIKE $${idx}
-        OR p.brand ILIKE $${idx}
+        p.product_name ILIKE $${paramCount}
+        OR p.sku ILIKE $${paramCount}
       )
     `);
 
     values.push(`%${search}%`);
-    idx++;
+    paramCount++;
   }
 
-  /* -------------------- STATUS FILTER -------------------- */
   if (status) {
-    conditions.push(`p.status = $${idx}`);
+    conditions.push(`p.status = $${paramCount}`);
     values.push(status);
-    idx++;
+    paramCount++;
   }
 
-  /* -------------------- CATEGORY FILTER -------------------- */
-  if (category) {
-    conditions.push(`p.category = $${idx}`);
-    values.push(category);
-    idx++;
+  if (categoryId) {
+    conditions.push(`p.category_id = $${paramCount}`);
+    values.push(categoryId);
+    paramCount++;
   }
 
-  const whereClause = `WHERE ${conditions.join(" AND ")}`;
+  if (brandId) {
+    conditions.push(`p.brand_id = $${paramCount}`);
+    values.push(brandId);
+    paramCount++;
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const countQuery = `
+    SELECT COUNT(*)::INTEGER AS total
+    FROM products p
+    ${whereClause}
+  `;
+
+  const countResult = await pool.query(countQuery, values);
+
+  const total = countResult.rows[0].total;
+
+  values.push(limit);
+  values.push(offset);
 
   const productsQuery = `
-    WITH sales AS (
-      SELECT
-        ti.product_id,
-        COALESCE(SUM(ti.quantity), 0)::int AS units_sold,
-        COALESCE(SUM(ti.quantity * ti.price), 0) AS total_revenue
-      FROM transaction_items ti
-      INNER JOIN transactions t
-        ON t.id = ti.transaction_id
-      GROUP BY ti.product_id
-    )
+    SELECT
+      p.id,
+      p.sku,
+      p.slug,
 
+      p.product_name AS "productName",
+      p.price,
+      p.status,
+
+      p.created_at AS "createdAt",
+
+      c.name AS "categoryName",
+      b.name AS "brandName",
+
+      (
+        SELECT image_url
+        FROM product_images
+        WHERE product_id = p.id
+        AND is_primary = true
+        LIMIT 1
+      ) AS "primaryImage"
+
+    FROM products p
+
+    LEFT JOIN categories c
+      ON c.id = p.category_id
+
+    LEFT JOIN brands b
+      ON b.id = p.brand_id
+
+    ${whereClause}
+
+    ORDER BY p.created_at DESC
+
+    LIMIT $${paramCount}
+    OFFSET $${paramCount + 1}
+  `;
+
+  const productsResult = await pool.query(productsQuery, values);
+
+  return {
+    products: productsResult.rows,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+// GET PRODUCT BY ID
+export const getProductByIdService = async (productId) => {
+  const productResult = await pool.query(
+    `
     SELECT
       p.id,
       p.sku,
       p.barcode,
-      p.product_name AS "productName",
-      p.price,
-      p.category,
-      p.status,
-      p.vat_type AS "vatType",
-      p.brand,
+      p.slug,
 
-      COALESCE(s.units_sold, 0)::int AS "unitsSold",
-      COALESCE(s.total_revenue, 0)::int AS "totalRevenue",
+      p.product_name AS "productName",
+      p.short_description AS "shortDescription",
+      p.description,
+      p.features,
+
+      p.price,
+      p.status,
+
+      p.vat_type AS "vatType",
+
+      p.category_id AS "categoryId",
+      c.name AS "categoryName",
+
+      p.brand_id AS "brandId",
+      b.name AS "brandName",
 
       p.created_at AS "createdAt",
       p.updated_at AS "updatedAt"
 
     FROM products p
 
-    LEFT JOIN sales s
-      ON s.product_id = p.id
+    LEFT JOIN categories c
+      ON c.id = p.category_id
 
-    ${whereClause}
+    LEFT JOIN brands b
+      ON b.id = p.brand_id
 
-    ORDER BY "totalRevenue" DESC
+    WHERE p.id = $1
+    `,
+    [productId],
+  );
 
-    LIMIT $${idx}
-    OFFSET $${idx + 1}
-  `;
+  if (productResult.rowCount === 0) {
+    const error = new Error("Product not found");
+    error.statusCode = 404;
+    throw error;
+  }
 
-  const countQuery = `
-    SELECT COUNT(*) AS total
-    FROM products p
-    ${whereClause}
-  `;
+  const product = productResult.rows[0];
 
-  const [productsResult, countResult] = await Promise.all([
-    client.query(productsQuery, [...values, limit, offset]),
-    client.query(countQuery, values),
-  ]);
+  const specificationsResult = await pool.query(
+    `
+    SELECT
+      id,
+      name,
+      value
+    FROM product_specifications
+    WHERE product_id = $1
+    ORDER BY id ASC
+    `,
+    [productId],
+  );
 
-  const total = Number(countResult.rows[0].total);
-  const totalPages = Math.ceil(total / limit);
+  const imagesResult = await pool.query(
+    `
+    SELECT
+      id,
+      image_url AS "imageUrl",
+      sort_order AS "sortOrder",
+      is_primary AS "isPrimary"
+    FROM product_images
+    WHERE product_id = $1
+    ORDER BY sort_order ASC
+    `,
+    [productId],
+  );
 
   return {
-    products: productsResult.rows,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-    },
+    ...product,
+    specifications: specificationsResult.rows,
+    images: imagesResult.rows,
   };
 };
 
@@ -283,110 +521,6 @@ export const productSummaryStatsService = async () => {
   const { rows } = await pool.query(query);
 
   return rows[0];
-};
-
-export const updateProductStockService = async ({
-  client,
-  id,
-  branchId,
-  action,
-  quantity,
-  notes,
-  handledBy,
-}) => {
-  try {
-    const inventoryRes = await client.query(
-      `
-      SELECT *
-      FROM branch_inventory
-      WHERE product_id = $1
-      AND branch_id = $2
-      `,
-      [id, branchId],
-    );
-
-    let inventory;
-
-    if (inventoryRes.rowCount === 0) {
-      const createInventoryRes = await client.query(
-        `
-        INSERT INTO branch_inventory (
-          branch_id,
-          product_id,
-          stock
-        )
-        VALUES ($1, $2, 0)
-        RETURNING *
-        `,
-        [branchId, id],
-      );
-
-      inventory = createInventoryRes.rows[0];
-    } else {
-      inventory = inventoryRes.rows[0];
-    }
-
-    const beforeStock = inventory.stock;
-    let afterStock = beforeStock;
-
-    // 🔥 Compute stock
-    if (action === "IN") {
-      afterStock += quantity;
-    } else if (action === "OUT") {
-      if (quantity > beforeStock) {
-        throw new Error("Insufficient stock");
-      }
-
-      afterStock -= quantity;
-    } else {
-      throw new Error("Invalid action type");
-    }
-
-    // 📝 Update inventory stock
-    const updateRes = await client.query(
-      `
-      UPDATE branch_inventory
-      SET
-        stock = $1,
-        updated_at = NOW()
-      WHERE product_id = $2
-      AND branch_id = $3
-      RETURNING *
-      `,
-      [afterStock, id, branchId],
-    );
-
-    // 📦 Log movement
-    await client.query(
-      `
-      INSERT INTO stock_movements (
-        handled_by,
-        product_id,
-        branch_id,
-        type,
-        quantity,
-        before_stock,
-        after_stock,
-        reference
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `,
-      [
-        handledBy,
-        id,
-        branchId,
-        action,
-        quantity,
-        beforeStock,
-        afterStock,
-        notes || null,
-      ],
-    );
-
-    return updateRes.rows[0];
-  } catch (error) {
-    throw error;
-  }
 };
 
 export const getProductsPOSService = async (branchId, search = "") => {
@@ -451,4 +585,30 @@ export const getProductsPOSService = async (branchId, search = "") => {
   );
 
   return result.rows;
+};
+
+export const findProductByIdService = async (id) => {
+  const query = `
+    SELECT 
+      p.id,
+      p.sku,
+      p.barcode,
+      p.product_name AS "productName",
+      p.price,
+      p.category,
+      p.status,
+      p.vat_type AS "vatType",
+      p.brand,
+
+      p.created_at AS "createdAt",
+      p.updated_at AS "updatedAt"
+
+    FROM products p
+
+    WHERE p.id = $1
+  `;
+
+  const { rows } = await pool.query(query, [id]);
+
+  return rows[0];
 };

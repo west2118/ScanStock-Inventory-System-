@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  createStockMovement,
   findStockMovementById,
   getStockMovements,
   inventoryMovementSummaryStats,
@@ -11,12 +10,6 @@ import { authorizeRoles } from "../middlewares/authRole.js";
 
 const router = express.Router();
 
-router.post(
-  "/stock-movement/in",
-  verifyToken,
-  authorizeRoles("admin", "branch_manager", "staff"),
-  createStockMovement,
-);
 router.get(
   "/stock-movements",
   verifyToken,

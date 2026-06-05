@@ -1,6 +1,5 @@
 import pool from "../config/db.js";
 import { calculateSales } from "../utils/transactions.js";
-import { updateProductStockService } from "./product.service.js";
 
 export const createTransactionService = async (
   client,

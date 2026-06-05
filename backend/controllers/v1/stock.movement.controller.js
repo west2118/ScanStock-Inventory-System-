@@ -8,47 +8,6 @@ import {
   inventorySummaryStatsService,
 } from "../../services/stock.movement.service.js";
 
-export const createStockMovement = async (req, res) => {
-  try {
-    const movement = await createStockMovementService(req.body);
-
-    res.status(201).json({
-      success: true,
-      message: "Stock movement recorded successfully",
-      data: movement,
-    });
-  } catch (error) {
-    console.error(error.message);
-
-    // 🔥 Handle known errors cleanly
-    if (error.message === "Product not found") {
-      return res.status(404).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    if (error.message === "Insufficient stock") {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    if (error.message === "Invalid movement type") {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to process stock movement",
-    });
-  }
-};
-
 export const getStockMovements = async (req, res) => {
   const { branchId } = req.user;
 

@@ -59,11 +59,11 @@ app.use("/api", authRoutes);
 app.use("/api", productRoutes);
 app.use("/api", stockMovementRoutes);
 app.use("/api", reportRoutes);
-app.use("/api", branchRoutes);
 app.use("/api", transactionRoutes);
 
 app.use("/api", categoryRoutes);
 app.use("/api", brandRoutes);
+app.use("/api", branchRoutes);
 
 app.use("/api", dashboardRoutes);
 
@@ -72,14 +72,14 @@ app.use(errorHandler);
 // Create table before starting server
 // createBranchInventoryTable();
 // createProductTable();
-// createBranchTable();
+createBranchTable();
 // createUserTable();
 // createRefreshTokenTable();
 // createStockMovementTable();
 // createTransactionTable();
 // createTransactionItemTable();
 // createBrandTable();
-createCategoryTable();
+// createCategoryTable();
 // createProductImagesTable();
 // createProductSpecificationsTable();
 
