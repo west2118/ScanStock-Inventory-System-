@@ -60,12 +60,11 @@ export const getProducts = asyncHandler(async (req, res) => {
     categoryId: req.query.categoryId ? Number(req.query.categoryId) : undefined,
     brandId: req.query.brandId ? Number(req.query.brandId) : undefined,
     status: req.query.status,
+
+    branchId: req.user.branchId,
   });
 
-  return res.status(200).json({
-    success: true,
-    data: products,
-  });
+  return res.status(200).json(products);
 });
 
 // GET PRODUCT BY ID

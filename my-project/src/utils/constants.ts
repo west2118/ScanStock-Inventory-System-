@@ -9,6 +9,7 @@ import {
   Box,
   PercentSquareIcon,
   Receipt,
+  Package2,
 } from "lucide-react";
 
 // Navigation items
@@ -19,18 +20,18 @@ export const navigation = [
     roles: ["admin", "branch_manager"],
     icon: LayoutDashboard,
   },
-  {
-    id: "POS",
-    name: "POS",
-    roles: ["admin", "branch_manager", "staff"],
-    icon: PercentSquareIcon,
-  },
-  {
-    id: "transactions",
-    name: "Transactions",
-    roles: ["admin", "branch_manager", "staff"],
-    icon: Receipt,
-  },
+  // {
+  //   id: "POS",
+  //   name: "POS",
+  //   roles: ["admin", "branch_manager", "staff"],
+  //   icon: PercentSquareIcon,
+  // },
+  // {
+  //   id: "transactions",
+  //   name: "Transactions",
+  //   roles: ["admin", "branch_manager", "staff"],
+  //   icon: Receipt,
+  // },
   {
     id: "products",
     name: "Products",
@@ -42,6 +43,12 @@ export const navigation = [
     name: "Inventory",
     roles: ["admin", "branch_manager", "staff"],
     icon: Package,
+  },
+  {
+    id: "stock-adjustments",
+    name: "Stock Adjustments",
+    roles: ["admin", "branch_manager", "staff"],
+    icon: Package2,
   },
   {
     id: "scan",

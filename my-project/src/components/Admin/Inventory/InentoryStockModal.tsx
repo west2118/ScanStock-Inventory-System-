@@ -4,6 +4,7 @@ import { capitalizeFirst } from "../../../utils/utils";
 import Modal from "../UI/Modal";
 import { useForm } from "../../../hooks/useForm";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../context/AuthContext";
 
 type InentoryStockModalProps = {
   isModalOpen: boolean;
@@ -23,6 +24,7 @@ const InentoryStockModal = ({
   selectedProduct,
   movementType,
 }: InentoryStockModalProps) => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { formData, handleChange } = useForm<FormData>({
     quantity: 0,
@@ -34,16 +36,23 @@ const InentoryStockModal = ({
   const productMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const response = await fetch(
-        `http://localhost:5001/api/product/${selectedProduct?.id}/stock?action=${movementType}`,
+        `http://localhost:5001/api/stock-adjustments`,
         {
-          method: "PUT",
+          method: "POST",
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            ...formData,
-            price: selectedProduct?.price,
+            items: [
+              {
+                productId: selectedProduct?.id,
+                quantity: Number(formData.quantity),
+                adjustmentType: movementType,
+              },
+            ],
+            reason: formData.notes,
+            branchId: user?.branchId,
           }),
         },
       );

@@ -15,9 +15,12 @@ import InentoryStockModal from "./InentoryStockModal";
 
 type ProductsData = {
   products: ProductType[];
-  page: number;
-  total: number;
-  totalPages: number;
+  pagination: {
+    limit: number;
+    page: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
 const InventoryTable = () => {
@@ -58,6 +61,8 @@ const InventoryTable = () => {
       setMovementType(action);
     }
   };
+
+  console.log(data);
 
   return (
     <>
@@ -171,8 +176,8 @@ const InventoryTable = () => {
             <Pagination
               limit={limit}
               page={page}
-              total={data?.total}
-              totalPages={data?.totalPages}
+              total={data?.pagination.total}
+              totalPages={data?.pagination.totalPages}
               setPage={setPage}
               setLimit={setLimit}
               col={7}

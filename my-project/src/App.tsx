@@ -22,9 +22,10 @@ import ProductDetailsPage from "./page/store/ProductDetails";
 import WishlistPage from "./page/store/Wishlist";
 import CartPage from "./page/store/Cart";
 import CheckoutPage from "./page/store/Checkout";
-import LoginPage from "./page/store/Login";
-import RegisterPage from "./page/store/Register";
+import LoginPage from "./page/Login";
+import RegisterPage from "./page/Register";
 import StoreLayout from "./components/store/StoreLayout";
+import StockAdjustments from "./page/admin/StockAdjustments";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -86,6 +87,14 @@ const router = createBrowserRouter(
           element={
             <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
               <Inventory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="stock-adjustments"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
+              <StockAdjustments />
             </ProtectedRoute>
           }
         />

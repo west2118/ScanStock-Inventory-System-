@@ -106,18 +106,13 @@ const Sidebar = ({ sidebarOpen }: { sidebarOpen: any }) => {
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
               <span className="text-white font-semibold">
-                {user?.name
-                  .split(" ")
-                  .map((word) => word[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2)}
+                {/* {user?.firstName} */}
               </span>
             </div>
 
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.name}
+                {/* {user?.name} */}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {capitalizeFirst(user?.role ?? "")} User

@@ -11,6 +11,7 @@ const InventoryTableRow = ({
   item,
   handleSelectProduct,
 }: InventoryTableRowProps) => {
+  console.log("Item: ", item);
   return (
     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4">
@@ -27,9 +28,7 @@ const InventoryTableRow = ({
       </td>
       <td className="px-6 py-4">
         <span className="inline-flex px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-          {item.category.length > 3
-            ? capitalizeFirst(item.category)
-            : item.category.toUpperCase()}
+          {capitalizeFirst(item.category)}
         </span>
       </td>
       <td className="px-6 py-4 text-right">

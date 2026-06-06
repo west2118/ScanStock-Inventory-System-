@@ -1,211 +1,42 @@
-// LoginPage.jsx
-import React, { useState } from "react";
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  LogIn,
-  User,
-  Shield,
-  CheckCircle,
-  AlertCircle,
-  ArrowRight,
-  Cpu,
-  Search,
-  Heart,
-  ShoppingCart,
-  ChevronDown,
-} from "lucide-react";
+import { useState } from "react";
+import { Mail, Lock, Eye, EyeOff, LogIn, CheckCircle, Cpu } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useForm } from "../hooks/useForm";
+import { toast } from "react-toastify";
+
+type FormData = {
+  email: string;
+  password: string;
+};
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetSent, setResetSent] = useState(false);
 
-  const handleSubmit = (e) => {
+  const { login, loading } = useAuth();
+  const { formData, handleChange } = useForm<FormData>({
+    email: "",
+    password: "",
+  });
+
+  const handleLogin = async (e: any) => {
     e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log("Login attempted:", { email, password });
-    }, 1000);
+
+    try {
+      const user = await login(formData);
+
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/staff/scan");
+      }
+
+      toast.success("Login successfully!");
+    } catch (error: any) {
+      toast.error(error instanceof Error ? error.message : "Login failed");
+    }
   };
-
-  const handleResetPassword = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setResetSent(true);
-    }, 1000);
-  };
-
-  if (showForgotPassword) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-white shadow-sm">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600">
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="h-16 flex items-center justify-between gap-6">
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="bg-white/10 p-2 rounded-lg">
-                    <Cpu className="w-7 h-7 text-white" />
-                  </div>
-                  <span className="text-2xl font-bold text-white">EasyPC</span>
-                </div>
-                <div className="flex-1 max-w-2xl">
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search products..."
-                      className="w-full h-11 pl-12 pr-4 rounded-lg border border-white/20 bg-white text-gray-900"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-5 shrink-0">
-                  <Heart className="w-5 h-5 text-white cursor-pointer" />
-                  <div className="relative">
-                    <ShoppingCart className="w-5 h-5 text-white cursor-pointer" />
-                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                      3
-                    </span>
-                  </div>
-                  <User className="w-5 h-5 text-white cursor-pointer" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="border-b border-gray-200 bg-white">
-            <div className="max-w-7xl mx-auto">
-              <nav className="h-12 flex items-center justify-center gap-8 text-sm uppercase">
-                <a
-                  href="#"
-                  className="text-black hover:text-blue-600 transition-colors"
-                >
-                  Home
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-1 text-black hover:text-blue-600 transition-colors"
-                >
-                  Products <ChevronDown className="w-4 h-4" />
-                </a>
-                <a
-                  href="#"
-                  className="text-black hover:text-blue-600 transition-colors"
-                >
-                  Desktop
-                </a>
-                <a
-                  href="#"
-                  className="text-black hover:text-blue-600 transition-colors"
-                >
-                  Laptop
-                </a>
-                <a
-                  href="#"
-                  className="text-black hover:text-blue-600 transition-colors"
-                >
-                  Build a PC
-                </a>
-                <a
-                  href="#"
-                  className="text-black hover:text-blue-600 transition-colors"
-                >
-                  Brands
-                </a>
-              </nav>
-            </div>
-          </div>
-        </header>
-
-        {/* Reset Password Content */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4 min-h-[calc(100vh-128px)]">
-          <div className="max-w-md w-full">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-4">
-                <Cpu className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900">EasyPC</h1>
-              <p className="text-sm text-gray-500 mt-1">Reset your password</p>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-              {!resetSent ? (
-                <form onSubmit={handleResetPassword}>
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        type="email"
-                        value={resetEmail}
-                        onChange={(e) => setResetEmail(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
-                        placeholder="Enter your email address"
-                        required
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      We'll send you a link to reset your password
-                    </p>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
-                  >
-                    {isLoading ? "Sending..." : "Send Reset Link"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(false)}
-                    className="w-full mt-3 py-3 text-gray-600 hover:text-gray-900 transition-colors text-sm"
-                  >
-                    Back to Login
-                  </button>
-                </form>
-              ) : (
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Check your email
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-6">
-                    We've sent a password reset link to {resetEmail}
-                  </p>
-                  <button
-                    onClick={() => {
-                      setShowForgotPassword(false);
-                      setResetSent(false);
-                      setResetEmail("");
-                    }}
-                    className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
-                  >
-                    Return to Login
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white">
@@ -276,7 +107,7 @@ const LoginPage = () => {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleLogin}>
                 {/* Email Field */}
                 <div className="mb-5">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -286,8 +117,9 @@ const LoginPage = () => {
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all"
                       placeholder="john@example.com"
                       required
@@ -304,8 +136,9 @@ const LoginPage = () => {
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
                       className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all"
                       placeholder="Enter your password"
                       required
@@ -329,15 +162,12 @@ const LoginPage = () => {
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-400"
                     />
                     <span className="text-sm text-gray-600">Remember me</span>
                   </label>
                   <button
                     type="button"
-                    onClick={() => setShowForgotPassword(true)}
                     className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
                   >
                     Forgot password?
@@ -347,10 +177,10 @@ const LoginPage = () => {
                 {/* Login Button */}
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={loading}
                   className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? (
+                  {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>

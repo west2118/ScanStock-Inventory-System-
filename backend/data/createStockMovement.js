@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
 
-const createStockMovementsTable = async () => {
+const createStockMovementTable = async () => {
   const queryText = `
     CREATE TABLE IF NOT EXISTS stock_movements (
       id SERIAL PRIMARY KEY,
@@ -42,4 +42,4 @@ const createStockMovementsTable = async () => {
   }
 };
 
-export default createStockMovementsTable;
+export default createStockMovementTable;

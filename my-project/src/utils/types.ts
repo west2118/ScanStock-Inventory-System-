@@ -156,3 +156,31 @@ export type DashboardDataType = {
   summary: DashboardSummaryType;
   charts: DashboardChartsType;
 };
+
+export type StockAdjustmentItemType = {
+  id: number;
+  productId: number;
+  productName: string;
+  adjustmentType: "IN" | "OUT";
+  quantity: number;
+  remarks: string | null;
+};
+
+export type StockAdjustmentType = {
+  id: number;
+  reason: string;
+  status: "pending" | "approved" | "rejected" | "voided";
+
+  createdAt: string;
+  createdById: number;
+  createdByName: string;
+
+  items: StockAdjustmentItemType[];
+};
+
+export type PaginationType = {
+  limit: number;
+  page: number;
+  total: number;
+  totalPages: number;
+};

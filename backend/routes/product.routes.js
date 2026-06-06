@@ -21,10 +21,15 @@ import {
 const router = express.Router();
 
 router.post("/products", validate(createProductSchema), createProduct);
-router.put("/products/:id", validate(createProductSchema), updateProduct);
-router.put("/products/:id/delete", deleteProduct);
-router.get("/products", getProducts);
-router.get("/products/:id", getProductById);
+router.put(
+  "/products/:id",
+  verifyToken,
+  validate(createProductSchema),
+  updateProduct,
+);
+router.put("/products/:id/delete", verifyToken, deleteProduct);
+router.get("/products", verifyToken, getProducts);
+router.get("/products/:id", verifyToken, getProductById);
 
 // router.put(
 //   "/product/:id",

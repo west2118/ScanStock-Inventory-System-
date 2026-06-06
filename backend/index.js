@@ -17,6 +17,7 @@ import transactionRoutes from "./routes/transaction.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import brandRoutes from "./routes/brand.routes.js";
+import stockAdjustmentRoutes from "./routes/stock.adjustment.routes.js";
 
 import createProductTable from "./data/createProductTable.js";
 import createStockMovementTable from "./data/createStockMovement.js";
@@ -32,6 +33,8 @@ import createProductImagesTable from "./data/createProductImages.js";
 import createProductSpecificationsTable from "./data/createProductSpecification.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { apiLimiter } from "./utils/apiLimiter.js";
+import createStockAdjustmentTable from "./data/createStockAdjustmentTable.js";
+import createStockAdjustmentItemTable from "./data/createStockAdjustmentItemTable.js";
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -64,13 +67,14 @@ app.use("/api", transactionRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", brandRoutes);
 app.use("/api", branchRoutes);
+app.use("/api", stockAdjustmentRoutes);
 
 app.use("/api", dashboardRoutes);
 
 app.use(errorHandler);
 
 // Create table before starting server
-// createBranchInventoryTable();
+createBranchInventoryTable();
 // createProductTable();
 createBranchTable();
 // createUserTable();
@@ -82,6 +86,9 @@ createBranchTable();
 // createCategoryTable();
 // createProductImagesTable();
 // createProductSpecificationsTable();
+createStockAdjustmentTable();
+createStockAdjustmentItemTable();
+createStockMovementTable();
 
 // Testing postgres
 app.get("/", async (req, res) => {

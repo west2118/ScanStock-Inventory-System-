@@ -274,6 +274,7 @@ export const getProductsService = async ({
   status,
   categoryId,
   brandId,
+  branchId,
 }) => {
   const offset = (page - 1) * limit;
 
@@ -322,8 +323,16 @@ export const getProductsService = async ({
   `;
 
   const countResult = await pool.query(countQuery, values);
-
   const total = countResult.rows[0].total;
+
+  // Save current parameter index for branchId
+  let branchParam = null;
+
+  if (branchId) {
+    values.push(branchId);
+    branchParam = paramCount;
+    paramCount++;
+  }
 
   values.push(limit);
   values.push(offset);
@@ -333,6 +342,7 @@ export const getProductsService = async ({
       p.id,
       p.sku,
       p.slug,
+      p.barcode,
 
       p.product_name AS "productName",
       p.price,
@@ -340,8 +350,11 @@ export const getProductsService = async ({
 
       p.created_at AS "createdAt",
 
-      c.name AS "categoryName",
-      b.name AS "brandName",
+      c.name AS "category",
+      b.name AS "brand",
+
+      COALESCE(bi.stock, 0) AS stock,
+      COALESCE(bi.reserved_stock, 0) AS "reservedStock",
 
       (
         SELECT image_url
@@ -358,6 +371,10 @@ export const getProductsService = async ({
 
     LEFT JOIN brands b
       ON b.id = p.brand_id
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      ${branchId ? `AND bi.branch_id = $${branchParam}` : ""}
 
     ${whereClause}
 
@@ -379,7 +396,6 @@ export const getProductsService = async ({
     },
   };
 };
-
 // GET PRODUCT BY ID
 export const getProductByIdService = async (productId) => {
   const productResult = await pool.query(
