@@ -6,7 +6,7 @@ import { useForm } from "../../../hooks/useForm";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext";
 
-type InentoryStockModalProps = {
+type InventoryStockModalProps = {
   isModalOpen: boolean;
   isCloseModal: () => void;
   selectedProduct: ProductType | null;
@@ -18,12 +18,12 @@ type FormData = {
   notes: string;
 };
 
-const InentoryStockModal = ({
+const InventoryStockModal = ({
   isModalOpen,
   isCloseModal,
   selectedProduct,
   movementType,
-}: InentoryStockModalProps) => {
+}: InventoryStockModalProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { formData, handleChange } = useForm<FormData>({
@@ -35,6 +35,18 @@ const InentoryStockModal = ({
 
   const productMutation = useMutation({
     mutationFn: async (formData: FormData) => {
+      console.log({
+        items: [
+          {
+            productId: selectedProduct?.id,
+            quantity: Number(formData.quantity),
+          },
+        ],
+        adjustmentType: movementType,
+        reason: formData.notes,
+        branchId: user?.branchId,
+      });
+
       const response = await fetch(
         `http://localhost:5001/api/stock-adjustments`,
         {
@@ -48,9 +60,9 @@ const InentoryStockModal = ({
               {
                 productId: selectedProduct?.id,
                 quantity: Number(formData.quantity),
-                adjustmentType: movementType,
               },
             ],
+            adjustmentType: movementType,
             reason: formData.notes,
             branchId: user?.branchId,
           }),
@@ -223,4 +235,4 @@ const InentoryStockModal = ({
   );
 };
 
-export default InentoryStockModal;
+export default InventoryStockModal;

@@ -3,8 +3,8 @@ type PaginationProps = {
   page: number;
   total: number | undefined;
   totalPages: number | undefined;
-  setPage: React.Dispatch<React.SetStateAction<number>>;
-  setLimit: React.Dispatch<React.SetStateAction<number>>;
+  setPage: (page: number) => void;
+  setLimit: (limit: number) => void;
   col: number;
 };
 
@@ -36,7 +36,7 @@ const Pagination = ({
 
   return (
     <tfoot>
-      <tr>
+      <tr className="border-t border-gray-100">
         <td colSpan={col} className="px-6 py-4">
           <div className="w-full flex flex-row items-center justify-between gap-4">
             {/* Left side */}
@@ -54,7 +54,6 @@ const Pagination = ({
                   value={limit}
                   onChange={(e) => {
                     setLimit(Number(e.target.value));
-                    setPage(1);
                   }}
                   className="px-3 py-1.5 border border-gray-300 rounded-md bg-white"
                 >
@@ -72,7 +71,7 @@ const Pagination = ({
                 <div className="flex items-center gap-1">
                   {/* Previous */}
                   <button
-                    onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+                    onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
                     className="h-8 px-3 text-sm rounded-md border border-gray-200 bg-white text-gray-900
                  hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
@@ -88,7 +87,7 @@ const Pagination = ({
                       className={`h-8 w-8 text-sm rounded-md border transition
                     ${
                       num === page
-                        ? "bg-gray-50 text-zinc-900 border-zinc-300"
+                        ? "bg-zinc-100 text-zinc-900 border-zinc-300"
                         : "bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
                     }
                 `}
@@ -99,9 +98,7 @@ const Pagination = ({
 
                   {/* Next */}
                   <button
-                    onClick={() =>
-                      setPage((p) => Math.min(totalPages ?? 0, p + 1))
-                    }
+                    onClick={() => setPage(Math.min(totalPages ?? 1, page + 1))}
                     disabled={page === totalPages}
                     className="h-8 px-3 text-sm rounded-md border border-gray-200 bg-white text-gray-900
                  hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"

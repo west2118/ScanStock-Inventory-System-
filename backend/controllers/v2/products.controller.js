@@ -2,6 +2,7 @@ import { asyncHandler } from "../../utils/helper.js";
 import pool from "../../config/db.js";
 import {
   createProductService,
+  findProductByBarcodeService,
   getProductByIdService,
   getProductsService,
   updateProductService,
@@ -75,6 +76,33 @@ export const getProductById = asyncHandler(async (req, res) => {
 
   return res.status(200).json({
     success: true,
+    data: product,
+  });
+});
+
+// FIND PRODUCT USING BARCODE
+export const findProductByBarcode = asyncHandler(async (req, res) => {
+  const { branchId } = req.user;
+  const { barcode } = req.params;
+
+  if (!barcode) {
+    return res.status(400).json({
+      success: false,
+      message: "Barcode is required",
+    });
+  }
+
+  const product = await findProductByBarcodeService(barcode, branchId);
+
+  if (!product) {
+    return res.status(404).json({
+      message: "Product not found",
+      action: "CREATE_PRODUCT",
+    });
+  }
+
+  res.json({
+    message: "Product Scanned Successfully!",
     data: product,
   });
 });

@@ -152,39 +152,7 @@ export const getProductsPOS = async (req, res) => {
   }
 };
 
-// FIND PRODUCT USING BARCODE
-export const findProductByBarcode = async (req, res) => {
-  const { barcode } = req.params;
 
-  try {
-    if (!barcode) {
-      return res.status(400).json({
-        success: false,
-        message: "Barcode is required",
-      });
-    }
-
-    const product = await findProductByBarcodeService(barcode);
-
-    if (!product) {
-      return res.status(404).json({
-        message: "Product not found",
-        action: "CREATE_PRODUCT",
-      });
-    }
-
-    res.json({
-      message: "Product Scanned Successfully!",
-      data: product,
-    });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch product",
-    });
-  }
-};
 
 export const productSummaryStats = async (req, res) => {
   try {

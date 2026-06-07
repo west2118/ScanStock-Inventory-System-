@@ -2,16 +2,69 @@ import { Camera } from "lucide-react";
 import ScanScannerArea from "../../components/Admin/Scan/ScanScannerArea";
 import ScanProductInfo from "../../components/Admin/Scan/ScanProductInfo";
 import { useState } from "react";
-import type { ProductType } from "../../utils/types";
+import type { ItemType, ProductType } from "../../utils/types";
 
 const Scan = () => {
   const [cameraOn, setCameraOn] = useState(false);
-  const [scannedProduct, setScannedProduct] = useState<ProductType | null>(
-    null,
-  );
+  const [items, setItems] = useState<ItemType[]>([]);
 
-  const handleSelectProduct = (product: ProductType | null) => {
-    setScannedProduct(product);
+  const addNewItem = (product: ProductType) => {
+    setItems((prev) => {
+      const existingItem = prev.find((item) => item.productId === product.id);
+
+      if (existingItem) {
+        return prev.map((item) =>
+          item.productId === product.id
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+              }
+            : item,
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          id: Date.now(),
+          productId: product.id,
+          productName: product.productName,
+          sku: product.sku,
+          currentStock: product.stock,
+          quantity: 1,
+          remarks: "",
+        },
+      ];
+    });
+  };
+
+  const removeItem = (id: number) => {
+    setItems(items.filter((item) => item.id !== id));
+  };
+
+  const updateItem = (
+    id: number,
+    field: "quantity" | "remarks",
+    value: number | string,
+  ) => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+
+        if (field === "quantity") {
+          return {
+            ...item,
+            quantity: Number(value),
+          };
+        }
+
+        return { ...item, remarks: String(value) };
+      }),
+    );
+  };
+
+  const clearItem = () => {
+    setItems([]);
   };
 
   return (
@@ -39,17 +92,16 @@ const Scan = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left Column - Scanner Area */}
-        <ScanScannerArea
-          handleSelectProduct={handleSelectProduct}
-          cameraOn={cameraOn}
-        />
+        <ScanScannerArea addNewItem={addNewItem} cameraOn={cameraOn} />
 
         {/* Right Column - Product Info & Confirmation */}
         <ScanProductInfo
-          scannedProduct={scannedProduct}
-          setScannedProduct={setScannedProduct}
+          items={items}
+          removeItem={removeItem}
+          updateItem={updateItem}
+          clearItem={clearItem}
         />
       </div>
     </main>

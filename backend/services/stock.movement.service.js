@@ -104,49 +104,51 @@ export const getStockMovementsService = async ({
   const offset = (page - 1) * limit;
 
   const conditions = [];
-  const values = [branchId];
+  const values = [];
   let idx = 1;
 
-  conditions.push(`sm.branch_id = $${idx}`);
-  idx++;
+  if (branchId) {
+    conditions.push(`sm.branch_id = $${idx}`);
+    values.push(branchId);
+    idx++;
+  }
 
-  /* -------------------- SEARCH -------------------- */
   if (search) {
     conditions.push(`
       (
         p.product_name ILIKE $${idx}
         OR p.barcode ILIKE $${idx}
-        OR p.category ILIKE $${idx}
-        OR u.name ILIKE $${idx}
+        OR p.sku ILIKE $${idx}
+        OR c.name ILIKE $${idx}
+        OR CONCAT(u.first_name, ' ', u.last_name) ILIKE $${idx}
       )
     `);
+
     values.push(`%${search}%`);
     idx++;
   }
 
-  /* -------------------- CATEGORY FILTER -------------------- */
   if (type) {
-    conditions.push(`sm.type = $${idx}`);
+    conditions.push(`sm.movement_type = $${idx}`);
     values.push(type);
     idx++;
   }
 
   if (category) {
-    conditions.push(`p.category = $${idx}`);
+    conditions.push(`c.name = $${idx}`);
     values.push(category);
     idx++;
   }
 
-  const whereClause = conditions.length
-    ? `WHERE ${conditions.join(" AND ")}`
-    : "";
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  /* -------------------- TOTAL COUNT -------------------- */
   const totalResult = await pool.query(
     `
     SELECT COUNT(*)::int AS total
     FROM stock_movements sm
     JOIN products p ON sm.product_id = p.id
+    LEFT JOIN categories c ON p.category_id = c.id
     JOIN users u ON sm.handled_by = u.id
     ${whereClause}
     `,
@@ -156,29 +158,34 @@ export const getStockMovementsService = async ({
   const total = totalResult.rows[0].total;
   const totalPages = Math.ceil(total / limit);
 
-  /* -------------------- DATA QUERY -------------------- */
   const result = await pool.query(
     `
     SELECT
       sm.id,
-      sm.type,
+      sm.movement_type AS "movementType",
       sm.quantity,
-      sm.reference,
+      sm.reference_type AS "referenceType",
+      sm.reference_id AS "referenceId",
       sm.before_stock AS "beforeStock",
       sm.after_stock AS "afterStock",
       sm.created_at AS "createdAt",
+      sm.remarks,
 
       p.id AS "productId",
       p.product_name AS "productName",
+      p.sku,
       p.barcode,
-      p.category,
+
+      c.id AS "categoryId",
+      c.name AS "categoryName",
 
       u.id AS "handledBy",
-      u.name AS "handledByName",
+      CONCAT(u.first_name, ' ', u.last_name) AS "handledByName",
       u.role AS "handledByRole"
 
     FROM stock_movements sm
     JOIN products p ON sm.product_id = p.id
+    LEFT JOIN categories c ON p.category_id = c.id
     JOIN users u ON sm.handled_by = u.id
 
     ${whereClause}
@@ -191,6 +198,7 @@ export const getStockMovementsService = async ({
   return {
     movements: result.rows,
     page,
+    limit,
     total,
     totalPages,
   };

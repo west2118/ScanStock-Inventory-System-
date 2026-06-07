@@ -1,99 +1,33 @@
-import {
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Eye,
-  MinusCircle,
-  PlusCircle,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { Check, Eye, X } from "lucide-react";
 import type { StockAdjustmentType } from "../../../utils/types";
 import { dateFormatter } from "../../../utils/utils";
+import TypeBadge from "../Badges/TypeBadge";
+import StatusBadge from "../Badges/StatusBadge";
 
 type StockAdjustmentTableRowProps = {
   adj: StockAdjustmentType;
-  handleViewStockAdjustment;
+  handleViewStockAdjustment: (StockAdjustment: StockAdjustmentType) => void;
+  handleApproveStockAdjustment: (StockAdjustment: StockAdjustmentType) => void;
+  handleRejectStockAdjustment: (StockAdjustment: StockAdjustmentType) => void;
 };
 
 const StockAdjustmentTableRow = ({
   adj,
   handleViewStockAdjustment,
+  handleApproveStockAdjustment,
+  handleRejectStockAdjustment,
 }: StockAdjustmentTableRowProps) => {
   const productCount = adj.items.length;
 
-  const productNames = adj.items.map((item) => item.productName).join(", ");
+  const productNames =
+    adj.items.length > 1
+      ? `${adj.items[0].productName} and ${adj.items.length - 1} more`
+      : adj.items[0]?.productName || "-";
 
   const totalQuantity = adj.items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const adjustmentType = adj.items[0]?.adjustmentType ?? "IN";
-
-  const getTypeBadge = (type: "IN" | "OUT") => {
-    if (type === "IN") {
-      return {
-        bg: "bg-green-100",
-        text: "text-green-700",
-        icon: <PlusCircle className="w-3 h-3" />,
-        label: "Stock In",
-      };
-    }
-
-    return {
-      bg: "bg-red-100",
-      text: "text-red-700",
-      icon: <MinusCircle className="w-3 h-3" />,
-      label: "Stock Out",
-    };
-  };
-
-  const getStatusBadge = (
-    status: "pending" | "approved" | "rejected" | "voided",
-  ) => {
-    switch (status) {
-      case "approved":
-        return {
-          bg: "bg-green-100",
-          text: "text-green-700",
-          icon: <CheckCircle className="w-3 h-3" />,
-          label: "Approved",
-        };
-
-      case "pending":
-        return {
-          bg: "bg-yellow-100",
-          text: "text-yellow-700",
-          icon: <Clock className="w-3 h-3" />,
-          label: "Pending",
-        };
-
-      case "rejected":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-700",
-          icon: <XCircle className="w-3 h-3" />,
-          label: "Rejected",
-        };
-
-      case "voided":
-        return {
-          bg: "bg-gray-100",
-          text: "text-gray-700",
-          icon: <AlertCircle className="w-3 h-3" />,
-          label: "Voided",
-        };
-
-      default:
-        return {
-          bg: "bg-gray-100",
-          text: "text-gray-700",
-          icon: <AlertCircle className="w-3 h-3" />,
-          label: status,
-        };
-    }
-  };
-
-  const typeBadge = getTypeBadge(adjustmentType);
-  const statusBadge = getStatusBadge(adj.status);
+  const typeBadge = TypeBadge(adj.adjustmentType);
+  const statusBadge = StatusBadge(adj.status);
 
   return (
     <tr className="hover:bg-gray-50 transition-colors group">
@@ -111,7 +45,7 @@ const StockAdjustmentTableRow = ({
       <td className="px-6 py-4 align-center">
         <div>
           <p className="text-sm text-gray-900 font-medium">
-            {productCount} product{productCount !== 1 ? "s" : ""}
+            {productCount} Product{productCount !== 1 ? "s" : ""}
           </p>
           <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
             {productNames}
@@ -131,10 +65,10 @@ const StockAdjustmentTableRow = ({
       <td className="px-6 py-4 text-center align-center">
         <span
           className={`text-sm font-bold ${
-            adjustmentType === "IN" ? "text-green-600" : "text-red-600"
+            adj.adjustmentType === "IN" ? "text-green-600" : "text-red-600"
           }`}
         >
-          {adjustmentType === "IN" ? "+" : "-"}
+          {adj.adjustmentType === "IN" ? "+" : "-"}
           {totalQuantity}
         </span>
       </td>
@@ -154,23 +88,39 @@ const StockAdjustmentTableRow = ({
 
       <td className="px-6 py-4 align-center">
         <p className="text-sm text-gray-700">{adj.createdByName}</p>
+        {adj.status !== "pending" && (
+          <p className="text-xs text-gray-400">Handled By: {adj.handledBy}</p>
+        )}
       </td>
 
-      <td className="px-6 py-4 text-center align-center">
+      <td className="px-6 py-4 text-center align-middle">
         <div className="flex items-center justify-center gap-2">
+          {adj.status === "pending" && (
+            <>
+              <button
+                onClick={() => handleApproveStockAdjustment(adj)}
+                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                title="Approve"
+              >
+                <Check size={16} />
+              </button>
+
+              <button
+                onClick={() => handleRejectStockAdjustment(adj)}
+                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Reject"
+              >
+                <X size={16} />
+              </button>
+            </>
+          )}
+
           <button
             onClick={() => handleViewStockAdjustment(adj)}
             className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             title="View Details"
           >
             <Eye size={16} />
-          </button>
-
-          <button
-            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 size={16} />
           </button>
         </div>
       </td>

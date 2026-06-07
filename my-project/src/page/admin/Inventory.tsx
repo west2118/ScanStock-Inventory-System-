@@ -1,61 +1,41 @@
-import { Package, AlertTriangle, XCircle, AlertCircle } from "lucide-react";
 import InventoryTable from "../../components/Admin/Inventory/InventoryTable";
-import { fetchData } from "../../utils/utils";
-import { useQuery } from "@tanstack/react-query";
-import SummaryStatCardList from "../../components/Admin/SummaryStatCardList";
-import SummaryStatCardListSkeleton from "../../components/Admin/Skeletons/SummaryStatCardListSkeleton";
+import InventorySummaryStats from "../../components/Admin/Inventory/InventorySummaryStats";
+import InventoryStockModal from "../../components/Admin/Inventory/InventoryStockModal";
+import { useState } from "react";
+import type { ProductType } from "../../utils/types";
+
+type InventoryModalType = "stock-in" | "stock-out" | null;
 
 const Inventory = () => {
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["inventory-summary-stats"],
-    queryFn: fetchData(`http://localhost:5001/api/inventory/stats`),
-  });
+  const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(
+    null,
+  );
+  const [modalType, setModalType] = useState<InventoryModalType>(null);
 
-  const summaryCards = [
-    {
-      title: "In Stock",
-      value: data?.inStock ?? 0,
-      subtitle: "healthy inventory",
-      icon: Package,
-      iconColor: "text-green-600",
-    },
-    {
-      title: "Low Stock",
-      value: data?.lowStock ?? 0,
-      subtitle: "needs restock soon",
-      icon: AlertTriangle,
-      iconColor: "text-yellow-600",
-    },
-    {
-      title: "Critical Stock",
-      value: data?.criticalStock ?? 0,
-      subtitle: "urgent attention",
-      icon: AlertCircle,
-      iconColor: "text-orange-600",
-    },
-    {
-      title: "Out of Stock",
-      value: data?.outOfStock ?? 0,
-      subtitle: "no inventory left",
-      icon: XCircle,
-      iconColor: "text-red-600",
-    },
-  ];
+  const handleSelectProduct = (product: ProductType, action: "IN" | "OUT") => {
+    setSelectedProduct(product);
+    setModalType(action === "IN" ? "stock-in" : "stock-out");
+  };
+
+  const handleCloseModal = () => {
+    setSelectedProduct(null);
+    setModalType(null);
+  };
 
   return (
     <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {isLoading
-          ? Array.from({ length: 4 }).map((_, index) => (
-              <SummaryStatCardListSkeleton key={index} />
-            ))
-          : summaryCards.map((summary) => (
-              <SummaryStatCardList key={summary.title} summary={summary} />
-            ))}
-      </div>
+      <InventorySummaryStats />
 
-      <InventoryTable />
+      <InventoryTable onSelectProduct={handleSelectProduct} />
+
+      {modalType && selectedProduct && (
+        <InventoryStockModal
+          isModalOpen={Boolean(modalType)}
+          isCloseModal={handleCloseModal}
+          selectedProduct={selectedProduct}
+          movementType={modalType === "stock-in" ? "IN" : "OUT"}
+        />
+      )}
     </main>
   );
 };

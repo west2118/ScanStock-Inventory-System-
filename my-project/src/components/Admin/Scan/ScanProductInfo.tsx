@@ -1,31 +1,41 @@
 import { useState } from "react";
-import type { ProductType } from "../../../utils/types";
+import type { ItemType } from "../../../utils/types";
 import ScanModeToggle from "./ScanModeToggle";
 import ScanScannedProductDetail from "./ScanScannedProductDetail";
 import ScanNoProductFound from "./ScanNoProductFound";
 
 type ScanProductInfoProps = {
-  scannedProduct: ProductType | null;
-  setScannedProduct: any;
+  items: ItemType[];
+  removeItem: (id: number) => void;
+  updateItem: (
+    id: number,
+    field: "quantity" | "remarks",
+    value: number | string,
+  ) => void;
+  clearItem: () => void;
 };
 
 const ScanProductInfo = ({
-  scannedProduct,
-  setScannedProduct,
+  items,
+  removeItem,
+  updateItem,
+  clearItem,
 }: ScanProductInfoProps) => {
   const [scanMode, setScanMode] = useState("IN");
 
   return (
-    <div className="lg:col-span-1">
+    <div className="lg:col-span-2">
       {/* Mode Toggle */}
       <ScanModeToggle setScanMode={setScanMode} scanMode={scanMode} />
 
       {/* Product Display Card */}
-      {scannedProduct ? (
+      {items.length >= 1 ? (
         <ScanScannedProductDetail
           scanMode={scanMode}
-          scannedProduct={scannedProduct}
-          setScannedProduct={setScannedProduct}
+          items={items}
+          removeItem={removeItem}
+          updateItem={updateItem}
+          clearItem={clearItem}
         />
       ) : (
         <ScanNoProductFound />

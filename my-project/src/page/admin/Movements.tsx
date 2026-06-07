@@ -20,6 +20,7 @@ import { fetchData } from "../../utils/utils";
 import SummaryStatCardList from "../../components/Admin/SummaryStatCardList";
 import SummaryStatCardListSkeleton from "../../components/Admin/Skeletons/SummaryStatCardListSkeleton";
 import { useState } from "react";
+import StockMovementSummaryStats from "../../components/Admin/Movements/StockMovementSummaryStats";
 
 const Movements = () => {
   const [selectedMovement, setSelectedMovement] = useState(null);
@@ -33,47 +34,38 @@ const Movements = () => {
   const summaryCards = [
     {
       title: "Total Movements",
-      value: data?.totalMovements ?? 0,
+      value: 1247,
       subtitle: "all transactions",
       icon: Activity,
       iconColor: "text-blue-600",
     },
     {
       title: "Stock In",
-      value: data?.totalStockIn ?? 0,
+      value: 856,
       subtitle: "items added",
       icon: ArrowDownCircle,
       iconColor: "text-green-600",
     },
     {
       title: "Stock Out",
-      value: data?.totalStockOut ?? 0,
+      value: 391,
       subtitle: "items removed",
       icon: ArrowUpCircle,
       iconColor: "text-red-600",
     },
     {
       title: "Net Change",
-      value: data?.totalNetChange ?? 0,
+      value: 465,
       subtitle: "inventory balance",
       icon: TrendingUp,
-      iconColor:
-        (data?.totalNetChange ?? 0) >= 0 ? "text-green-600" : "text-red-600",
+      iconColor: "text-green-600",
     },
   ];
 
   return (
     <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {isLoading
-          ? Array.from({ length: 4 }).map((_, index) => (
-              <SummaryStatCardListSkeleton key={index} />
-            ))
-          : summaryCards.map((summary) => (
-              <SummaryStatCardList key={summary.title} summary={summary} />
-            ))}
-      </div>
+      <StockMovementSummaryStats />
 
       <StockMovementTable />
     </main>

@@ -26,6 +26,22 @@ export const fetchData =
     return response.json();
   };
 
+export const fetchTableData =
+  (url: string) =>
+  async ({ queryKey }: { queryKey: any }) => {
+    const [_key, filters] = queryKey;
+
+    const query = createQueryString(filters);
+
+    const response = await fetchWithAuth(`${url}?${query}`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch data");
+    }
+
+    return response.json();
+  };
+
 export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   let response = await fetch(url, {
     ...options,
@@ -67,7 +83,7 @@ export const getStockStatus = (product: {
   // 🟠 Critical
   if (stock <= product.stockCritical) {
     return {
-      label: "Critical",
+      label: "Critical Stock",
       color: "bg-orange-100 text-orange-800",
       textColor: "text-orange-600",
       background: "bg-orange-500",
@@ -78,7 +94,7 @@ export const getStockStatus = (product: {
   // 🟡 Low
   if (stock <= product.stockLow) {
     return {
-      label: "Low",
+      label: "Low Stock",
       color: "bg-yellow-100 text-yellow-800",
       textColor: "text-yellow-600",
       background: "bg-yellow-400",
@@ -89,7 +105,7 @@ export const getStockStatus = (product: {
   // 🔵 High
   if ((product.stockHigh ?? 0) > 0 && stock >= (product.stockHigh ?? 0)) {
     return {
-      label: "High",
+      label: "High Stock",
       color: "bg-blue-100 text-blue-800",
       textColor: "text-blue-600",
       background: "bg-blue-500",
@@ -176,4 +192,16 @@ export const getDefaultRouteByRole = (role: string) => {
   };
 
   return routes[normalized] || "/";
+};
+
+export const createQueryString = (params: any) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  });
+
+  return searchParams.toString();
 };

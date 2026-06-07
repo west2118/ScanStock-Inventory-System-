@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  findProductByBarcode,
   productSummaryStats,
   findProductById,
   updateProductStock,
@@ -13,6 +12,7 @@ import { createProductSchema } from "../validations/product.validation.js";
 import {
   createProduct,
   deleteProduct,
+  findProductByBarcode,
   getProductById,
   getProducts,
   updateProduct,
@@ -30,6 +30,12 @@ router.put(
 router.put("/products/:id/delete", verifyToken, deleteProduct);
 router.get("/products", verifyToken, getProducts);
 router.get("/products/:id", verifyToken, getProductById);
+router.get(
+  "/product-scan/:barcode",
+  verifyToken,
+  authorizeRoles("admin", "branch_manager", "staff"),
+  findProductByBarcode,
+);
 
 // router.put(
 //   "/product/:id",

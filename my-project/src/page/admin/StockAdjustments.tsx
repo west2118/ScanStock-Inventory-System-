@@ -6,26 +6,40 @@ import {
   Activity,
 } from "lucide-react";
 import StockAdjustmentsTable from "../../components/Admin/Stock-Adjustments/StockAdjustmentsTable";
-import StockAdjustmentNewModal from "../../components/Admin/Stock-Adjustments/StockAdjustmentNewModal";
 import type { StockAdjustmentType } from "../../utils/types";
 import { useState } from "react";
+import StockAdjustmentDetailsModal from "../../components/Admin/Stock-Adjustments/StockAdjustmentDetailsModal";
+import ApproveStockAdjustmentModal from "../../components/Admin/Stock-Adjustments/ApproveStockAdjustmentModal";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import RejectStockAdjustmentModal from "../../components/Admin/Stock-Adjustments/RejectStockAdjustmentModal";
+import StockAdjustmentSummaryStats from "../../components/Admin/Stock-Adjustments/StockAdjustmentSummaryStats";
 
 const StockAdjustmentsPage = () => {
   const [selectedStockAdjustment, setSelectedStockAdjustment] =
     useState<StockAdjustmentType | null>(null);
-  const [modalType, setModalType] = useState<"view" | "create" | "edit" | null>(
-    null,
-  );
+  const [modalType, setModalType] = useState<
+    "view" | "create" | "approve" | "reject" | null
+  >(null);
+  const queryClient = useQueryClient();
+
+  const handleApproveStockAdjustment = (
+    stockAdjustment: StockAdjustmentType,
+  ) => {
+    setSelectedStockAdjustment(stockAdjustment);
+    setModalType("approve");
+  };
+
+  const handleRejectStockAdjustment = (
+    stockAdjustment: StockAdjustmentType,
+  ) => {
+    setSelectedStockAdjustment(stockAdjustment);
+    setModalType("reject");
+  };
 
   const handleViewStockAdjustment = (stockAdjustment: StockAdjustmentType) => {
     setSelectedStockAdjustment(stockAdjustment);
     setModalType("view");
-  };
-
-  // Edit StockAdjustment
-  const handleEditStockAdjustment = (stockAdjustment: StockAdjustmentType) => {
-    setSelectedStockAdjustment(stockAdjustment);
-    setModalType("edit");
   };
 
   // Create StockAdjustment
@@ -39,69 +53,112 @@ const StockAdjustmentsPage = () => {
     setModalType(null);
   };
 
-  const isFormModalOpen = modalType === "create" || modalType === "edit";
+  const approveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(
+        `http://localhost:5001/api/stock-adjustments/${selectedStockAdjustment?.id}/approve`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message ?? "Approve stock adjustment failed");
+      }
+
+      return data;
+    },
+    onSuccess: (response) => {
+      handleCloseModal();
+      toast.success(response.message);
+
+      queryClient.invalidateQueries({ queryKey: ["products-data"] });
+      queryClient.invalidateQueries({ queryKey: ["stock-adjustments-data"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Something went wrong");
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (rejectionReason: string) => {
+      const response = await fetch(
+        `http://localhost:5001/api/stock-adjustments/${selectedStockAdjustment?.id}/reject`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rejectionReason }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message ?? "Reject stock adjustment failed");
+      }
+
+      return data;
+    },
+    onSuccess: (response) => {
+      handleCloseModal();
+      toast.success(response.message);
+
+      queryClient.invalidateQueries({ queryKey: ["products-data"] });
+      queryClient.invalidateQueries({ queryKey: ["stock-adjustments-data"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Something went wrong");
+    },
+  });
+
+  const isFormModalOpen = modalType === "create";
   const isDetailsModalOpen = modalType === "view";
+  const isApproveModalOpen = modalType === "approve";
+  const isRejectModalOpen = modalType === "reject";
 
   return (
     <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Package size={18} className="text-blue-500" />
-            <span className="text-xs text-gray-400">Total Adjustments</span>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{0}</p>
-          <p className="text-xs text-gray-500 mt-1">transactions</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <TrendingUp size={18} className="text-green-500" />
-            <span className="text-xs text-gray-400">Stock Additions</span>
-          </div>
-          <p className="text-2xl font-bold text-green-600">+{0}</p>
-          <p className="text-xs text-gray-500 mt-1">units added</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <TrendingDown size={18} className="text-red-500" />
-            <span className="text-xs text-gray-400">Stock Removals</span>
-          </div>
-          <p className="text-2xl font-bold text-red-600">-{0}</p>
-          <p className="text-xs text-gray-500 mt-1">units removed</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Activity size={18} className="text-purple-500" />
-            <span className="text-xs text-gray-400">Net Change</span>
-          </div>
-          <p
-            className={`text-2xl font-bold ${10 >= 0 ? "text-green-600" : "text-red-600"}`}
-          >
-            {10 >= 0 ? "+" : ""}
-            {10}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">overall balance</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Clock size={18} className="text-yellow-500" />
-            <span className="text-xs text-gray-400">Pending Approval</span>
-          </div>
-          <p className="text-2xl font-bold text-yellow-600">{0}</p>
-          <p className="text-xs text-gray-500 mt-1">awaiting review</p>
-        </div>
-      </div>
+      <StockAdjustmentSummaryStats />
 
       <StockAdjustmentsTable
         handleViewStockAdjustment={handleViewStockAdjustment}
+        handleApproveStockAdjustment={handleApproveStockAdjustment}
+        handleRejectStockAdjustment={handleRejectStockAdjustment}
       />
 
-      <StockAdjustmentNewModal
-        isModalOpen={isDetailsModalOpen}
-        isCloseModal={handleCloseModal}
-        selectedStockAdjustment={selectedStockAdjustment}
-      />
+      {isDetailsModalOpen && (
+        <StockAdjustmentDetailsModal
+          isModalOpen={isDetailsModalOpen}
+          isCloseModal={handleCloseModal}
+          stockAdjustment={selectedStockAdjustment}
+        />
+      )}
+
+      {isApproveModalOpen && (
+        <ApproveStockAdjustmentModal
+          isModalOpen={isApproveModalOpen}
+          isCloseModal={handleCloseModal}
+          stockAdjustment={selectedStockAdjustment}
+          onApprove={() => approveMutation.mutate()}
+          isApproving={approveMutation.isPending}
+        />
+      )}
+
+      {isRejectModalOpen && (
+        <RejectStockAdjustmentModal
+          isModalOpen={isRejectModalOpen}
+          isCloseModal={handleCloseModal}
+          stockAdjustment={selectedStockAdjustment}
+          onReject={(reason) => rejectMutation.mutate(reason)}
+          isRejecting={rejectMutation.isPending}
+        />
+      )}
     </main>
   );
 };

@@ -16,19 +16,17 @@ const createStockAdjustmentTable = async () => {
             'voided'
         )),
 
+    adjustment_type VARCHAR(20) NOT NULL
+        CHECK (adjustment_type IN (
+            'IN',
+            'OUT'
+        )),
+
     reason TEXT NOT NULL,
 
-    approved_by INT
-        REFERENCES users(id)
-        ON DELETE SET NULL,
+    handled_by INT REFERENCES users(id) ON DELETE SET NULL,
 
-    approved_at TIMESTAMPTZ,
-
-    rejected_by INT
-        REFERENCES users(id)
-        ON DELETE SET NULL,
-
-    rejected_at TIMESTAMPTZ,
+    handled_at TIMESTAMPTZ,
 
     rejection_reason TEXT,
 

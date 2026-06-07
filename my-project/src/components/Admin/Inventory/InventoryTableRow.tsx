@@ -1,17 +1,16 @@
-import { Eye, Plus, Minus } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import type { ProductType } from "../../../utils/types";
 import { capitalizeFirst, getStockStatus } from "../../../utils/utils";
 
 type InventoryTableRowProps = {
   item: ProductType;
-  handleSelectProduct: (product: ProductType, action: "IN" | "OUT") => void;
+  onSelectProduct: (product: ProductType, action: "IN" | "OUT") => void;
 };
 
 const InventoryTableRow = ({
   item,
-  handleSelectProduct,
+  onSelectProduct,
 }: InventoryTableRowProps) => {
-  console.log("Item: ", item);
   return (
     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4">
@@ -59,14 +58,14 @@ const InventoryTableRow = ({
       <td className="px-6 py-4 text-center">
         <div className="flex items-center justify-center gap-2">
           <button
-            onClick={() => handleSelectProduct(item, "OUT")}
+            onClick={() => onSelectProduct(item, "OUT")}
             className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             title="Stock Out"
           >
             <Minus size={16} />
           </button>
           <button
-            onClick={() => handleSelectProduct(item, "IN")}
+            onClick={() => onSelectProduct(item, "IN")}
             className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
             title="Stock In"
           >

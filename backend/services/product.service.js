@@ -356,6 +356,10 @@ export const getProductsService = async ({
       COALESCE(bi.stock, 0) AS stock,
       COALESCE(bi.reserved_stock, 0) AS "reservedStock",
 
+      COALESCE(bi.stock_low, 0) AS "stockLow",
+      COALESCE(bi.stock_critical, 0) AS "stockCritical",
+      COALESCE(bi.stock_high, 0) AS "stockHigh",
+
       (
         SELECT image_url
         FROM product_images
@@ -480,30 +484,57 @@ export const getProductByIdService = async (productId) => {
   };
 };
 
-// FIND PRODUCT
-export const findProductByBarcodeService = async (barcode) => {
+// FIND PRODUCT BY BARCODE
+export const findProductByBarcodeService = async (barcode, branchId) => {
   const query = `
     SELECT 
-      id,
-      sku,
-      barcode,
-      product_name AS "productName",
-      price,
-      category,
-      location,
-      vat_type AS "vatType",
-      stock,
-      stock_low AS "stockLow",
-      stock_critical AS "stockCritical",
-      stock_high AS "stockHigh",
-      created_at AS "createdAt",
-      updated_at AS "updatedAt"
-    FROM products
-    WHERE barcode = $1
+      p.id,
+      p.sku,
+      p.barcode,
+      p.slug,
+      p.product_name AS "productName",
+      p.short_description AS "shortDescription",
+      p.description,
+      p.features,
+      p.price,
+      p.status,
+      p.vat_type AS "vatType",
+
+      c.id AS "categoryId",
+      c.name AS "categoryName",
+
+      b.id AS "brandId",
+      b.name AS "brandName",
+
+      bi.branch_id AS "branchId",
+      bi.shelf_location AS "location",
+      bi.stock,
+      bi.reserved_stock AS "reservedStock",
+      bi.stock_low AS "stockLow",
+      bi.stock_critical AS "stockCritical",
+      bi.stock_high AS "stockHigh",
+
+      p.created_at AS "createdAt",
+      p.updated_at AS "updatedAt"
+
+    FROM products p
+
+    LEFT JOIN categories c
+      ON c.id = p.category_id
+
+    LEFT JOIN brands b
+      ON b.id = p.brand_id
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = $2
+
+    WHERE p.barcode = $1
+      OR p.sku = $1
     LIMIT 1;
   `;
 
-  const { rows } = await pool.query(query, [barcode]);
+  const { rows } = await pool.query(query, [barcode, branchId]);
 
   return rows[0];
 };

@@ -2,6 +2,7 @@ import {
   approveStockAdjustmentService,
   createStockAdjustmentService,
   getStockAdjustmentsService,
+  rejectStockAdjustmentService,
 } from "../../services/stock.adjustment.service.js";
 import { asyncHandler } from "../../utils/helper.js";
 
@@ -9,6 +10,7 @@ export const createStockAdjustment = asyncHandler(async (req, res) => {
   const adjustment = await createStockAdjustmentService({
     ...req.validatedBody,
     createdBy: req.user.id,
+    branchId: req.user.branchId,
   });
 
   res.status(201).json({
@@ -21,7 +23,7 @@ export const createStockAdjustment = asyncHandler(async (req, res) => {
 export const approveStockAdjustment = asyncHandler(async (req, res) => {
   await approveStockAdjustmentService({
     adjustmentId: Number(req.params.id),
-    approvedBy: req.user.id,
+    handledBy: req.user.id,
   });
 
   res.status(200).json({
@@ -33,7 +35,7 @@ export const approveStockAdjustment = asyncHandler(async (req, res) => {
 export const rejectStockAdjustment = asyncHandler(async (req, res) => {
   const adjustment = await rejectStockAdjustmentService({
     adjustmentId: Number(req.params.id),
-    rejectedBy: req.user.id,
+    handledBy: req.user.id,
     rejectionReason: req.body.rejectionReason,
   });
 

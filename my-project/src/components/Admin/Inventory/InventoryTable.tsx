@@ -1,109 +1,38 @@
-// Inventory.jsx - Inventory Management Page
-import { useState } from "react";
-import { Search, ArrowUpDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import InventoryTableRow from "./InventoryTableRow";
-import { fetchData } from "../../../utils/utils";
-import type { ProductType } from "../../../utils/types";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useDebounceInput } from "../../../hooks/useDebounceInput";
-import { categories } from "../../../utils/constants";
 import Pagination from "../Pagination";
 import TableRowNoData from "../TableRowNoDataSkeleton";
 import TableRowErrorHandling from "../TableRowErrorHandling";
 import TableRowSkeleton from "../Skeletons/TableRowSkeleton";
-import InentoryStockModal from "./InentoryStockModal";
+import InventoryFilter from "./InventoryFilter";
+import { useInventoryProducts } from "./useInventoryProducts";
+import type { ProductType } from "../../../utils/types";
 
-type ProductsData = {
-  products: ProductType[];
-  pagination: {
-    limit: number;
-    page: number;
-    total: number;
-    totalPages: number;
-  };
+type InventoryTableProps = {
+  onSelectProduct: (product: ProductType, action: "IN" | "OUT") => void;
 };
 
-const InventoryTable = () => {
-  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(
-    null,
-  );
-  const [movementType, setMovementType] = useState<"IN" | "OUT">("IN");
-
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [limit, setLimit] = useState(10);
-
-  const [category, setCategory] = useState("");
-  const [status, setStatus] = useState("");
-
-  const debouncedSearch = useDebounceInput(search);
-  const { data, isLoading, isError, refetch } = useQuery<ProductsData>({
-    queryKey: ["products-data", page, limit, status, category, debouncedSearch],
-    queryFn: fetchData(
-      `http://localhost:5001/api/products
-      ?page=${page}
-      &limit=${limit}
-      &search=${debouncedSearch}
-      &status=${status}
-      &category=${category}`.replace(/\s+/g, ""),
-    ),
-    placeholderData: keepPreviousData,
-  });
-
-  const handleSelectProduct = (product: ProductType, action: "IN" | "OUT") => {
-    setSelectedProduct(product);
-    setIsStockModalOpen(true);
-
-    if (action === "IN") {
-      setMovementType(action);
-    } else if (action === "OUT") {
-      setMovementType(action);
-    }
-  };
-
-  console.log(data);
+const InventoryTable = ({ onSelectProduct }: InventoryTableProps) => {
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    params,
+    setParams,
+    filters,
+    searchInput,
+    setSearchInput,
+  } = useInventoryProducts();
 
   return (
     <>
-      {/* Filters and Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              type="text"
-              placeholder="Search products..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent w-full"
-            />
-          </div>
-
-          {/* Category Filter */}
-          <div className="flex gap-3 flex-wrap">
-            <select
-              value={category}
-              onChange={(e) => {
-                setCategory(e.target.value);
-                setPage(1);
-              }}
-              className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            >
-              <option value="">All Categories</option>
-              {categories.map((category) => (
-                <option key={category.value} value={category.value}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      <InventoryFilter
+        filters={filters}
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+        setParams={setParams}
+      />
 
       {/* Inventory Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -164,7 +93,7 @@ const InventoryTable = () => {
                   <InventoryTableRow
                     key={item.id}
                     item={item}
-                    handleSelectProduct={handleSelectProduct}
+                    onSelectProduct={onSelectProduct}
                   />
                 ))}
 
@@ -174,26 +103,17 @@ const InventoryTable = () => {
             </tbody>
 
             <Pagination
-              limit={limit}
-              page={page}
+              limit={params.limit}
+              page={params.page}
               total={data?.pagination.total}
               totalPages={data?.pagination.totalPages}
-              setPage={setPage}
-              setLimit={setLimit}
+              setPage={(newPage) => setParams({ page: newPage })}
+              setLimit={(newLimit) => setParams({ limit: newLimit, page: 1 })}
               col={7}
             />
           </table>
         </div>
       </div>
-
-      {isStockModalOpen && (
-        <InentoryStockModal
-          isModalOpen={isStockModalOpen}
-          isCloseModal={() => setIsStockModalOpen(false)}
-          selectedProduct={selectedProduct}
-          movementType={movementType}
-        />
-      )}
     </>
   );
 };

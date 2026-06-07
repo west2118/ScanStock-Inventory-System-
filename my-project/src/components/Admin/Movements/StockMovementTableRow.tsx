@@ -16,7 +16,7 @@ const StockMovementTableRow = ({
   movement,
   handleSelectMovement,
 }: StockMovementTableRowProps) => {
-  const movementUI = getMovementUI(movement.type);
+  const movementUI = getMovementUI(movement.movementType);
   const Icon = movementUI.icon;
 
   return (
@@ -48,7 +48,7 @@ const StockMovementTableRow = ({
       </td>
       <td className="px-6 py-4 text-center">
         <span className={`text-sm font-bold ${movementUI.textColor}`}>
-          {movement.type === "IN" ? "+" : "-"}
+          {movement.movementType === "IN" ? "+" : "-"}
           {movement.quantity}
         </span>
       </td>
@@ -56,9 +56,7 @@ const StockMovementTableRow = ({
         <div className="text-sm">
           <span className="text-gray-500">{movement.beforeStock}</span>
           <span className="mx-1 text-gray-400">→</span>
-          <span
-            className={`font-medium ${movement.afterStock <= 10 ? "text-red-600" : "text-gray-900"}`}
-          >
+          <span className={`font-medium text-gray-900`}>
             {movement.afterStock}
           </span>
         </div>
@@ -73,7 +71,12 @@ const StockMovementTableRow = ({
       </td>
       <td className="px-6 py-4">
         <div>
-          <p className="text-sm text-gray-600">{movement.reference}</p>
+          <p className="text-sm text-gray-600">
+            {movement.referenceType
+              .split("_")
+              .map((p) => capitalizeFirst(p))
+              .join(" ")}
+          </p>
         </div>
       </td>
       <td className="px-6 py-4 text-center">

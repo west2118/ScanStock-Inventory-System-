@@ -5,22 +5,17 @@ import { toast } from "react-toastify";
 import { Html5Qrcode } from "html5-qrcode";
 
 type ScanScannerAreaProps = {
-  handleSelectProduct: (product: ProductType | null) => void;
-  cameraOn: boolean; // ✅ ADD THIS
+  addNewItem: (product: ProductType) => void;
+  cameraOn: boolean;
 };
 
-const ScanScannerArea = ({
-  handleSelectProduct,
-  cameraOn,
-}: ScanScannerAreaProps) => {
+const ScanScannerArea = ({ addNewItem, cameraOn }: ScanScannerAreaProps) => {
   const isScanningRef = useRef(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
   const [barcodeInput, setBarcodeInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // ✅ SAFE STOP FUNCTION
   const stopScanner = async () => {
     if (scannerRef.current) {
       try {
@@ -73,14 +68,13 @@ const ScanScannerArea = ({
 
             if (res.status === 404) {
               toast.error("Product Not Found");
-              handleSelectProduct(null);
               return;
             }
 
             const data = await res.json();
             toast.success(data.message);
 
-            handleSelectProduct(data.data);
+            addNewItem(data.data);
 
             // 🔥 OPTIONAL: stop camera after success
             await stopScanner();
@@ -108,7 +102,7 @@ const ScanScannerArea = ({
     return () => {
       stopScanner();
     };
-  }, [cameraOn, handleSelectProduct]);
+  }, [cameraOn, addNewItem]);
 
   const handleScan = async (e: any) => {
     e.preventDefault();
@@ -132,7 +126,6 @@ const ScanScannerArea = ({
       if (res.status === 404) {
         toast.error("Product Not Found");
 
-        handleSelectProduct(null);
         return;
       }
 
@@ -144,7 +137,7 @@ const ScanScannerArea = ({
 
       toast.success(data.message);
 
-      handleSelectProduct(data.data);
+      addNewItem(data.data);
       setBarcodeInput("");
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");

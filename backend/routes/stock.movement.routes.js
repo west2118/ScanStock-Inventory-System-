@@ -1,12 +1,12 @@
 import express from "express";
 import {
   findStockMovementById,
-  getStockMovements,
   inventoryMovementSummaryStats,
   inventorySummaryStats,
 } from "../controllers/v1/stock.movement.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authRole.js";
+import { getStockMovements } from "../controllers/v2/stock.movement.controller.js";
 
 const router = express.Router();
 

@@ -44,8 +44,8 @@ export type InventoryMovementType = {
   beforeStock: number;
   afterStock: number;
 
-  type: "IN" | "OUT";
-  reference: string;
+  movementType: "IN" | "OUT";
+  referenceType: string;
 
   handledBy: number;
   handledByName: string;
@@ -57,23 +57,23 @@ export type InventoryMovementType = {
   category?: string;
 };
 
-export type ItemType = {
-  id: number;
-  sku: string;
-  barcode: string;
-  price: number;
-  productId: number;
-  category?: string;
-  productName: string;
-  quantity: number;
-  stock: number;
-  stockCritical: number;
-  stockHigh: number;
-  stockLow: number;
-  transactionType: string;
-  subtotal?: number;
-  vatType?: string;
-};
+// export type ItemType = {
+//   id: number;
+//   sku: string;
+//   barcode: string;
+//   price: number;
+//   productId: number;
+//   category?: string;
+//   productName: string;
+//   quantity: number;
+//   stock: number;
+//   stockCritical: number;
+//   stockHigh: number;
+//   stockLow: number;
+//   transactionType: string;
+//   subtotal?: number;
+//   vatType?: string;
+// };
 
 export type TransactionType = {
   changeAmount: string;
@@ -161,8 +161,9 @@ export type StockAdjustmentItemType = {
   id: number;
   productId: number;
   productName: string;
-  adjustmentType: "IN" | "OUT";
   quantity: number;
+  prevStock: number;
+  newStock: number;
   remarks: string | null;
 };
 
@@ -170,10 +171,13 @@ export type StockAdjustmentType = {
   id: number;
   reason: string;
   status: "pending" | "approved" | "rejected" | "voided";
+  adjustmentType: "IN" | "OUT";
 
   createdAt: string;
   createdById: number;
   createdByName: string;
+  handledBy: string;
+  handledAt: string;
 
   items: StockAdjustmentItemType[];
 };
@@ -183,4 +187,24 @@ export type PaginationType = {
   page: number;
   total: number;
   totalPages: number;
+};
+
+export type ProductsData = {
+  products: ProductType[];
+  pagination: {
+    limit: number;
+    page: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
+export type ItemType = {
+  id: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  currentStock: number;
+  quantity: number;
+  remarks: string;
 };

@@ -5,6 +5,7 @@ export const createStockAdjustmentService = async ({
   reason,
   items,
   createdBy,
+  adjustmentType,
 }) => {
   const client = await pool.connect();
 
@@ -17,12 +18,13 @@ export const createStockAdjustmentService = async ({
         branch_id,
         status,
         reason,
-        created_by
+        created_by,
+        adjustment_type
       )
-      VALUES ($1, 'pending', $2, $3)
+      VALUES ($1, 'pending', $2, $3, $4)
       RETURNING *
       `,
-      [branchId, reason, createdBy],
+      [branchId, reason, createdBy, adjustmentType],
     );
 
     const adjustment = adjustmentResult.rows[0];
@@ -33,19 +35,12 @@ export const createStockAdjustmentService = async ({
         INSERT INTO stock_adjustment_items (
           adjustment_id,
           product_id,
-          adjustment_type,
           quantity,
           remarks
         )
-        VALUES ($1, $2, $3, $4, $5)
+        VALUES ($1, $2, $3, $4)
         `,
-        [
-          adjustment.id,
-          item.productId,
-          item.adjustmentType,
-          item.quantity,
-          item.remarks || null,
-        ],
+        [adjustment.id, item.productId, item.quantity, item.remarks || null],
       );
     }
 
@@ -62,7 +57,7 @@ export const createStockAdjustmentService = async ({
 
 export const approveStockAdjustmentService = async ({
   adjustmentId,
-  approvedBy,
+  handledBy,
 }) => {
   const client = await pool.connect();
 
@@ -87,6 +82,10 @@ export const approveStockAdjustmentService = async ({
 
     if (adjustment.status !== "pending") {
       throw new Error(`Stock adjustment already ${adjustment.status}`);
+    }
+
+    if (!["IN", "OUT"].includes(adjustment.adjustment_type)) {
+      throw new Error(`Invalid adjustment type: ${adjustment.adjustment_type}`);
     }
 
     const itemsResult = await client.query(
@@ -122,7 +121,7 @@ export const approveStockAdjustmentService = async ({
       let afterStock = 0;
 
       if (!inventory) {
-        if (item.adjustment_type === "OUT") {
+        if (adjustment.adjustment_type === "OUT") {
           throw new Error(
             `Cannot deduct stock. Product ${item.product_id} has no inventory record.`,
           );
@@ -154,16 +153,16 @@ export const approveStockAdjustmentService = async ({
         inventory = createInventoryResult.rows[0];
 
         beforeStock = 0;
-        afterStock = item.quantity;
+        afterStock = Number(item.quantity);
       } else {
         beforeStock = Number(inventory.stock);
 
-        if (item.adjustment_type === "IN") {
+        if (adjustment.adjustment_type === "IN") {
           afterStock = beforeStock + Number(item.quantity);
-        } else if (item.adjustment_type === "OUT") {
+        }
+
+        if (adjustment.adjustment_type === "OUT") {
           afterStock = beforeStock - Number(item.quantity);
-        } else {
-          throw new Error(`Invalid adjustment type: ${item.adjustment_type}`);
         }
 
         if (afterStock < 0) {
@@ -181,6 +180,17 @@ export const approveStockAdjustmentService = async ({
           [afterStock, inventory.id],
         );
       }
+
+      await client.query(
+        `
+        UPDATE stock_adjustment_items
+        SET
+          previous_stock = $1,
+          new_stock = $2
+        WHERE id = $3
+        `,
+        [beforeStock, afterStock, item.id],
+      );
 
       await client.query(
         `
@@ -213,11 +223,11 @@ export const approveStockAdjustmentService = async ({
         `,
         [
           adjustment.branch_id,
-          approvedBy,
+          adjustment.created_by,
           item.product_id,
           "stock_adjustment",
           adjustment.id,
-          item.adjustment_type,
+          adjustment.adjustment_type,
           item.quantity,
           beforeStock,
           afterStock,
@@ -231,11 +241,11 @@ export const approveStockAdjustmentService = async ({
       UPDATE stock_adjustments
       SET
         status = 'approved',
-        approved_by = $1,
-        approved_at = NOW()
+        handled_by = $1,
+        handled_at = NOW()
       WHERE id = $2
       `,
-      [approvedBy, adjustmentId],
+      [handledBy, adjustmentId],
     );
 
     await client.query("COMMIT");
@@ -254,7 +264,7 @@ export const approveStockAdjustmentService = async ({
 
 export const rejectStockAdjustmentService = async ({
   adjustmentId,
-  rejectedBy,
+  handledBy,
   rejectionReason,
 }) => {
   const result = await pool.query(
@@ -262,14 +272,14 @@ export const rejectStockAdjustmentService = async ({
     UPDATE stock_adjustments
     SET
       status = 'rejected',
-      rejected_by = $1,
-      rejected_at = NOW(),
+      handled_by = $1,
+      handled_at = NOW(),
       rejection_reason = $2
     WHERE id = $3
     AND status = 'pending'
     RETURNING *
     `,
-    [rejectedBy, rejectionReason, adjustmentId],
+    [handledBy, rejectionReason, adjustmentId],
   );
 
   if (!result.rows.length) {
@@ -309,7 +319,6 @@ export const getStockAdjustmentsService = async ({
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  // Total Count
   const countQuery = `
     SELECT COUNT(*) AS total
     FROM stock_adjustments sa
@@ -319,57 +328,94 @@ export const getStockAdjustmentsService = async ({
   const countResult = await pool.query(countQuery, filterValues);
   const total = Number(countResult.rows[0].total);
 
-  // Data Query
   const dataValues = [...filterValues, limit, offset];
 
   const query = `
-  SELECT
-    sa.id,
-    sa.status,
-    sa.reason,
-    sa.created_at AS "createdAt",
+    SELECT
+      sa.id,
+      sa.status,
+      sa.reason,
+      sa.created_at AS "createdAt",
+      sa.adjustment_type AS "adjustmentType",
+      CONCAT(hu.first_name, ' ', hu.last_name) AS "handledBy",
+      sa.handled_at AS "handledAt",
 
-    u.id AS "createdById",
-    CONCAT(u.first_name, ' ', u.last_name) AS "createdByName",
+      u.id AS "createdById",
+      CONCAT(u.first_name, ' ', u.last_name) AS "createdByName",
 
-    COALESCE(
-      json_agg(
-        json_build_object(
-          'id', sai.id,
-          'productId', p.id,
-          'productName', p.product_name,
-          'adjustmentType', sai.adjustment_type,
-          'quantity', sai.quantity,
-          'remarks', sai.remarks
-        )
-      ) FILTER (WHERE sai.id IS NOT NULL),
-      '[]'
-    ) AS items
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', sai.id,
+            'productId', p.id,
+            'productName', p.product_name,
+            'quantity', sai.quantity,
 
-  FROM stock_adjustments sa
+            'prevStock',
+              CASE
+                WHEN sa.status = 'pending' THEN COALESCE(bi.stock, 0)
+                WHEN sa.status = 'approved' THEN COALESCE(sai.previous_stock, 0)
+                WHEN sa.status = 'rejected' THEN 0
+                ELSE 0
+              END,
 
-  LEFT JOIN users u
-    ON u.id = sa.created_by
+            'newStock',
+              CASE
+                WHEN sa.status = 'pending' AND sa.adjustment_type = 'IN'
+                  THEN COALESCE(bi.stock, 0) + sai.quantity
 
-  LEFT JOIN stock_adjustment_items sai
-    ON sai.adjustment_id = sa.id
+                WHEN sa.status = 'pending' AND sa.adjustment_type = 'OUT'
+                  THEN COALESCE(bi.stock, 0) - sai.quantity
 
-  LEFT JOIN products p
-    ON p.id = sai.product_id
+                WHEN sa.status = 'approved'
+                  THEN COALESCE(sai.new_stock, 0)
 
-  ${whereClause}
+                WHEN sa.status = 'rejected'
+                  THEN 0
 
-  GROUP BY
-    sa.id,
-    u.id,
-    u.first_name,
-    u.last_name
+                ELSE 0
+              END,
 
-  ORDER BY sa.created_at DESC
+            'remarks', sai.remarks
+          )
+          ORDER BY sai.id
+        ) FILTER (WHERE sai.id IS NOT NULL),
+        '[]'
+      ) AS items
 
-  LIMIT $${dataValues.length - 1}
-  OFFSET $${dataValues.length}
-`;
+    FROM stock_adjustments sa
+
+    LEFT JOIN users u
+      ON u.id = sa.created_by
+
+    LEFT JOIN users hu
+      ON hu.id = sa.handled_by
+
+    LEFT JOIN stock_adjustment_items sai
+      ON sai.adjustment_id = sa.id
+
+    LEFT JOIN products p
+      ON p.id = sai.product_id
+
+    LEFT JOIN branch_inventory bi
+      ON bi.branch_id = sa.branch_id
+      AND bi.product_id = sai.product_id
+
+    ${whereClause}
+
+    GROUP BY
+      sa.id,
+      u.id,
+      u.first_name,
+      u.last_name,
+      hu.first_name,
+      hu.last_name
+
+    ORDER BY sa.created_at DESC
+
+    LIMIT $${dataValues.length - 1}
+    OFFSET $${dataValues.length}
+  `;
 
   const result = await pool.query(query, dataValues);
 
