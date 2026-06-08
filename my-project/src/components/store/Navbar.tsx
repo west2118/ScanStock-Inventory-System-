@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   User,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
@@ -36,14 +37,18 @@ const Navbar = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-5 shrink-0">
-              <Heart className="w-5 h-5 text-white cursor-pointer" />
-              <div className="relative">
+              <Link to="wishlist">
+                <Heart className="w-5 h-5 text-white cursor-pointer" />
+              </Link>
+              <Link to="cart" className="relative">
                 <ShoppingCart className="w-5 h-5 text-white cursor-pointer" />
                 <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
                   3
                 </span>
-              </div>
-              <User className="w-5 h-5 text-white cursor-pointer" />
+              </Link>
+              <Link to="login">
+                <User className="w-5 h-5 text-white cursor-pointer" />
+              </Link>
             </div>
           </div>
         </div>
@@ -53,20 +58,20 @@ const Navbar = () => {
       <div className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto">
           <nav className="h-12 flex items-center justify-center gap-8 text-sm uppercase">
-            <a
-              href="#"
+            <Link
+              to="/"
               className="text-black hover:text-blue-600 transition-colors"
             >
               Home
-            </a>
+            </Link>
 
-            <a
-              href="#"
+            <Link
+              to="/products"
               className="flex items-center gap-1 text-black hover:text-blue-600 transition-colors"
             >
               Products
               <ChevronDown className="w-4 h-4" />
-            </a>
+            </Link>
 
             <a
               href="#"

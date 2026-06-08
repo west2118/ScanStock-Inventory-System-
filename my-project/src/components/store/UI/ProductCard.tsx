@@ -28,7 +28,7 @@ const ProductCard = ({
       </div>
       <div className="p-4">
         <p className="text-xs text-gray-500 mb-1">{product.brand}</p>
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm">
           {product.name}
         </h3>
         <div className="flex items-center gap-2 mb-2">

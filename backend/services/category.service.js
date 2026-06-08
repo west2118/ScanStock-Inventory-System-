@@ -3,7 +3,7 @@ import pool from "../config/db.js";
 export const createCategoryService = async (data) => {
   const { name, parentId = null, status = "active" } = data;
 
-  console.log(data)
+  console.log(data);
 
   const existingCategory = await pool.query(
     `
@@ -58,12 +58,14 @@ export const createCategoryService = async (data) => {
 export const getCategoriesService = async () => {
   const result = await pool.query(`
     SELECT
-      c.*,
-      p.name AS "parentName"
+      c.id,
+      c.name,
+      COUNT(p.id)::INTEGER AS count
     FROM categories c
-    LEFT JOIN categories p
-      ON c.parent_id = p.id
-    WHERE c.status <> 'archived'
+    LEFT JOIN products p
+      ON p.category_id = c.id
+      AND p.status = 'active'
+    GROUP BY c.id, c.name
     ORDER BY c.name ASC
   `);
 

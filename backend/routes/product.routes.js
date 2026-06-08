@@ -1,7 +1,6 @@
 import express from "express";
 import {
   productSummaryStats,
-  findProductById,
   updateProductStock,
   getProductsPOS,
 } from "../controllers/v1/product.controller.js";
@@ -13,6 +12,7 @@ import {
   createProduct,
   deleteProduct,
   findProductByBarcode,
+  getCollections,
   getProductById,
   getProducts,
   updateProduct,
@@ -29,7 +29,8 @@ router.put(
 );
 router.put("/products/:id/delete", verifyToken, deleteProduct);
 router.get("/products", verifyToken, getProducts);
-router.get("/products/:id", verifyToken, getProductById);
+router.get("/collections", getCollections);
+router.get("/collections/:id", getProductById);
 router.get(
   "/product-scan/:barcode",
   verifyToken,

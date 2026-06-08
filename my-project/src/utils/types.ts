@@ -208,3 +208,46 @@ export type ItemType = {
   quantity: number;
   remarks: string;
 };
+
+export type ProductImageType = {
+  id: number;
+  imageUrl: string;
+  sortOrder: number;
+  isPrimary: boolean;
+};
+
+export type ProductSpecificationType = {
+  id: number;
+  name: string;
+  value: string;
+};
+
+export type ProductDetailsType = {
+  id: number;
+
+  sku: string;
+  barcode: string;
+  slug: string;
+
+  productName: string;
+  shortDescription: string;
+  description: string;
+  features: string;
+
+  price: string;
+
+  status: string;
+  vatType: string;
+
+  categoryId: number;
+  categoryName: string;
+
+  brandId: number;
+  brandName: string;
+
+  createdAt: string;
+  updatedAt: string;
+
+  images: ProductImageType[];
+  specifications: ProductSpecificationType[];
+};

@@ -53,11 +53,16 @@ export const deleteBrand = asyncHandler(async (req, res) => {
 export const getBrands = asyncHandler(async (req, res) => {
   const brands = await getBrandsService();
 
-  return res.status(200).json({
-    success: true,
-    count: brands.length,
-    data: brands,
-  });
+  console.log(brands);
+
+  res.status(200).json([
+    {
+      id: "all",
+      name: "All Brands",
+      count: brands.reduce((sum, brand) => sum + brand.count, 0),
+    },
+    ...brands,
+  ]);
 });
 
 export const getBrandById = asyncHandler(async (req, res) => {

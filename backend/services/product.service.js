@@ -400,8 +400,9 @@ export const getProductsService = async ({
     },
   };
 };
+
 // GET PRODUCT BY ID
-export const getProductByIdService = async (productId) => {
+export const getProductByIdService = async (productSlug) => {
   const productResult = await pool.query(
     `
     SELECT
@@ -417,7 +418,6 @@ export const getProductByIdService = async (productId) => {
 
       p.price,
       p.status,
-
       p.vat_type AS "vatType",
 
       p.category_id AS "categoryId",
@@ -425,6 +425,8 @@ export const getProductByIdService = async (productId) => {
 
       p.brand_id AS "brandId",
       b.name AS "brandName",
+
+      COALESCE(bi.stock, 0) AS stock,
 
       p.created_at AS "createdAt",
       p.updated_at AS "updatedAt"
@@ -437,10 +439,19 @@ export const getProductByIdService = async (productId) => {
     LEFT JOIN brands b
       ON b.id = p.brand_id
 
-    WHERE p.id = $1
+    LEFT JOIN branches br
+      ON br.branch_name = 'Central Warehouse'
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = br.id
+
+    WHERE LOWER(p.slug) = LOWER($1)
     `,
-    [productId],
+    [productSlug],
   );
+
+  console.log(productResult.slug, productSlug);
 
   if (productResult.rowCount === 0) {
     const error = new Error("Product not found");
@@ -460,7 +471,7 @@ export const getProductByIdService = async (productId) => {
     WHERE product_id = $1
     ORDER BY id ASC
     `,
-    [productId],
+    [product.id],
   );
 
   const imagesResult = await pool.query(
@@ -474,7 +485,7 @@ export const getProductByIdService = async (productId) => {
     WHERE product_id = $1
     ORDER BY sort_order ASC
     `,
-    [productId],
+    [product.id],
   );
 
   return {
@@ -537,6 +548,148 @@ export const findProductByBarcodeService = async (barcode, branchId) => {
   const { rows } = await pool.query(query, [barcode, branchId]);
 
   return rows[0];
+};
+
+// GET COLLECTIONS
+export const getCollectionsService = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+  status,
+  categoryId,
+  brandId,
+  branchId,
+}) => {
+  const offset = (page - 1) * limit;
+
+  const values = [];
+  const conditions = [];
+  let paramCount = 1;
+
+  if (search) {
+    conditions.push(`
+      (
+        p.product_name ILIKE $${paramCount}
+        OR p.sku ILIKE $${paramCount}
+      )
+    `);
+    values.push(`%${search}%`);
+    paramCount++;
+  }
+
+  if (status) {
+    conditions.push(`p.status = $${paramCount}`);
+    values.push(status);
+    paramCount++;
+  }
+
+  if (categoryId) {
+    conditions.push(`p.category_id = $${paramCount}`);
+    values.push(categoryId);
+    paramCount++;
+  }
+
+  if (brandId) {
+    conditions.push(`p.brand_id = $${paramCount}`);
+    values.push(brandId);
+    paramCount++;
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const countQuery = `
+    SELECT COUNT(*)::INTEGER AS total
+    FROM products p
+    ${whereClause}
+  `;
+
+  const countResult = await pool.query(countQuery, values);
+  const total = countResult.rows[0].total;
+
+  let inventoryJoin = "";
+
+  if (branchId) {
+    values.push(branchId);
+    inventoryJoin = `
+      LEFT JOIN branch_inventory bi
+        ON bi.product_id = p.id
+        AND bi.branch_id = $${paramCount}
+    `;
+    paramCount++;
+  } else {
+    inventoryJoin = `
+      LEFT JOIN branches br
+        ON br.branch_name = 'Central Warehouse'
+
+      LEFT JOIN branch_inventory bi
+        ON bi.product_id = p.id
+        AND bi.branch_id = br.id
+    `;
+  }
+
+  values.push(limit);
+  values.push(offset);
+
+  const productsQuery = `
+    SELECT
+      p.id,
+      p.sku,
+      p.slug,
+      p.barcode,
+
+      p.product_name AS "productName",
+      p.price,
+      p.status,
+      p.created_at AS "createdAt",
+
+      c.name AS "category",
+      b.name AS "brand",
+
+      COALESCE(bi.stock, 0) AS stock,
+      COALESCE(bi.reserved_stock, 0) AS "reservedStock",
+
+      COALESCE(bi.stock_low, 0) AS "stockLow",
+      COALESCE(bi.stock_critical, 0) AS "stockCritical",
+      COALESCE(bi.stock_high, 0) AS "stockHigh",
+
+      (
+        SELECT image_url
+        FROM product_images
+        WHERE product_id = p.id
+        AND is_primary = true
+        LIMIT 1
+      ) AS "primaryImage"
+
+    FROM products p
+
+    LEFT JOIN categories c
+      ON c.id = p.category_id
+
+    LEFT JOIN brands b
+      ON b.id = p.brand_id
+
+    ${inventoryJoin}
+
+    ${whereClause}
+
+    ORDER BY p.created_at DESC
+
+    LIMIT $${paramCount}
+    OFFSET $${paramCount + 1}
+  `;
+
+  const productsResult = await pool.query(productsQuery, values);
+
+  return {
+    collections: productsResult.rows,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 export const productSummaryStatsService = async () => {

@@ -36,14 +36,19 @@ export const createBrandService = async (data) => {
 };
 
 export const getBrandsService = async () => {
-  const result = await pool.query(
-    `
-    SELECT *
-    FROM brands
-    WHERE status <> 'archived'
-    ORDER BY name ASC
-    `,
-  );
+  const result = await pool.query(`
+    SELECT
+      b.id,
+      b.name,
+      COUNT(p.id)::INTEGER AS count
+    FROM brands b
+    LEFT JOIN products p
+      ON p.brand_id = b.id
+      AND p.status = 'active'
+    WHERE b.status <> 'archived'
+    GROUP BY b.id, b.name
+    ORDER BY b.name ASC
+  `);
 
   return result.rows;
 };

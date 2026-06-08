@@ -20,11 +20,14 @@ export const createCategory = asyncHandler(async (req, res) => {
 export const getCategories = asyncHandler(async (req, res) => {
   const categories = await getCategoriesService();
 
-  return res.status(200).json({
-    success: true,
-    count: categories.length,
-    data: categories,
-  });
+  res.status(200).json([
+    {
+      id: "all",
+      name: "All Categories",
+      count: categories.reduce((sum, category) => sum + category.count, 0),
+    },
+    ...categories,
+  ]);
 });
 
 export const getCategoryById = asyncHandler(async (req, res) => {

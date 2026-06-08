@@ -3,6 +3,7 @@ import pool from "../../config/db.js";
 import {
   createProductService,
   findProductByBarcodeService,
+  getCollectionsService,
   getProductByIdService,
   getProductsService,
   updateProductService,
@@ -68,18 +69,6 @@ export const getProducts = asyncHandler(async (req, res) => {
   return res.status(200).json(products);
 });
 
-// GET PRODUCT BY ID
-export const getProductById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const product = await getProductByIdService(Number(id));
-
-  return res.status(200).json({
-    success: true,
-    data: product,
-  });
-});
-
 // FIND PRODUCT USING BARCODE
 export const findProductByBarcode = asyncHandler(async (req, res) => {
   const { branchId } = req.user;
@@ -105,4 +94,27 @@ export const findProductByBarcode = asyncHandler(async (req, res) => {
     message: "Product Scanned Successfully!",
     data: product,
   });
+});
+
+// GET COLLECTIONS
+export const getCollections = asyncHandler(async (req, res) => {
+  const products = await getCollectionsService({
+    page: Number(req.query.page) || 1,
+    limit: Number(req.query.limit) || 10,
+    search: req.query.search,
+    categoryId: req.query.categoryId ? Number(req.query.categoryId) : undefined,
+    brandId: req.query.brandId ? Number(req.query.brandId) : undefined,
+    status: req.query.status,
+  });
+
+  return res.status(200).json(products);
+});
+
+// GET PRODUCT BY ID
+export const getProductById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const product = await getProductByIdService(id);
+
+  return res.status(200).json(product);
 });
