@@ -14,9 +14,12 @@ import {
 import { useState } from "react";
 import type { ProductDetailsType } from "../../../utils/types";
 import { pesoFormatter } from "../../../utils/utils";
+import { useAddCart } from "../Hooks/useAddCart";
 
 const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
   const [quantity, setQuantity] = useState(1);
+
+  const addCartMutation = useAddCart();
 
   const incrementQuantity = () => {
     if (quantity < product.stock) {
@@ -114,7 +117,11 @@ const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
           Buy It Now
         </button>
 
-        <button className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+        <button
+          onClick={() => addCartMutation.mutate(product.id)}
+          disabled={addCartMutation.isPending}
+          className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+        >
           <ShoppingCart className="w-5 h-5" />
         </button>
 
@@ -126,6 +133,7 @@ const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
           <Share2 className="w-5 h-5" />
         </button>
       </div>
+
       {/* Features Grid */}
       <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-xl mb-6">
         <div className="flex items-center gap-2">

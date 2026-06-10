@@ -10,7 +10,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetchWithAuth("http://localhost:5001/api/me");
+      const response = await fetchWithAuth(
+        `${import.meta.env.VITE_API_URL}/me`,
+      );
 
       if (!response.ok) throw new Error();
 
@@ -19,7 +21,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch {
       setUser(null);
     } finally {
-      setLoading(false); // ✅ VERY IMPORTANT
+      setLoading(false);
     }
   };
 
@@ -28,7 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (formData: any) => {
-    const response = await fetch("http://localhost:5001/api/login", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -51,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
-    await fetch("http://localhost:5001/api/logout", {
+    await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
       method: "POST",
       credentials: "include",
       headers: {

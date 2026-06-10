@@ -10,6 +10,9 @@ import {
   PercentSquareIcon,
   Receipt,
   Package2,
+  Banknote,
+  CreditCard,
+  Wallet,
 } from "lucide-react";
 
 // Navigation items
@@ -111,4 +114,44 @@ export const COLORS = [
   "#ef4444", // red
   "#8b5cf6", // violet
   "#06b6d4", // cyan
+];
+
+export const paymentMethods = [
+  {
+    id: "cod",
+    name: "Cash on Delivery",
+    icon: Banknote,
+    description: "Pay when you receive the item",
+  },
+  {
+    id: "card",
+    name: "Credit/Debit Card",
+    icon: CreditCard,
+    description: "Visa, Mastercard, Amex",
+  },
+  { id: "gcash", name: "GCash", icon: Wallet, description: "Pay via GCash" },
+];
+
+export const deliveryMethods = [
+  {
+    id: "standard",
+    name: "Standard Delivery",
+    days: "3-5 business days",
+    price: 100,
+    minOrder: 0,
+  },
+  {
+    id: "express",
+    name: "Express Delivery",
+    days: "1-2 business days",
+    price: 200,
+    minOrder: 0,
+  },
+  {
+    id: "pickup",
+    name: "Store Pickup",
+    days: "Same day pickup",
+    price: 0,
+    minOrder: 0,
+  },
 ];

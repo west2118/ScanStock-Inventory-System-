@@ -234,6 +234,8 @@ export type ProductDetailsType = {
   description: string;
   features: string;
 
+  stock: number;
+
   price: string;
 
   status: string;
@@ -250,4 +252,18 @@ export type ProductDetailsType = {
 
   images: ProductImageType[];
   specifications: ProductSpecificationType[];
+};
+
+export type CartItem = {
+  id: number;
+  productId: number;
+  brandName: string;
+  productName: string;
+  sku: string;
+  imageUrl: string;
+  price: string;
+  quantity: number;
+  isSelected: boolean;
+  createdAt: string;
+  updatedAt: string;
 };

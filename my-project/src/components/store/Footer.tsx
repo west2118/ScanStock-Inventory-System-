@@ -2,7 +2,7 @@ import { Cpu, Mail, Phone } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white py-12">
+    <footer className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
@@ -12,20 +12,20 @@ const Footer = () => {
               </div>
               <span className="text-xl font-bold">EasyPC</span>
             </div>
-            <p className="text-gray-400 text-sm">
+            <p className="text-white text-sm">
               Your one-stop shop for premium computer parts and gaming gear in
               the Philippines.
             </p>
             {/* <div className="flex gap-4 mt-4">
-                <Facebook className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer" />
-                <Twitter className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer" />
-                <Instagram className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer" />
-                <Youtube className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer" />
+                <Facebook className="w-5 h-5 text-white hover:text-white cursor-pointer" />
+                <Twitter className="w-5 h-5 text-white hover:text-white cursor-pointer" />
+                <Instagram className="w-5 h-5 text-white hover:text-white cursor-pointer" />
+                <Youtube className="w-5 h-5 text-white hover:text-white cursor-pointer" />
               </div> */}
           </div>
           <div>
             <h4 className="font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-gray-400">
+            <ul className="space-y-2 text-white">
               <li>
                 <a href="#" className="hover:text-white transition-colors">
                   About Us
@@ -50,7 +50,7 @@ const Footer = () => {
           </div>
           <div>
             <h4 className="font-semibold mb-4">Categories</h4>
-            <ul className="space-y-2 text-gray-400">
+            <ul className="space-y-2 text-white">
               <li>
                 <a href="#" className="hover:text-white transition-colors">
                   Graphics Cards
@@ -75,7 +75,7 @@ const Footer = () => {
           </div>
           <div>
             <h4 className="font-semibold mb-4">Contact Info</h4>
-            <ul className="space-y-2 text-gray-400">
+            <ul className="space-y-2 text-white">
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
                 <span>(02) 8123 4567</span>
@@ -87,7 +87,7 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
+        <div className="border-t border-gray-200 pt-8 text-center text-white text-sm">
           <p>&copy; 2024 EasyPC. All rights reserved.</p>
         </div>
       </div>

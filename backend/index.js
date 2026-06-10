@@ -18,6 +18,9 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import brandRoutes from "./routes/brand.routes.js";
 import stockAdjustmentRoutes from "./routes/stock.adjustment.routes.js";
+import cartRoutes from "./routes/cart.routes.js";
+import checkoutRoutes from "./routes/checkout.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 
 import createProductTable from "./data/createProductTable.js";
 import createStockMovementTable from "./data/createStockMovement.js";
@@ -35,6 +38,9 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { apiLimiter } from "./utils/apiLimiter.js";
 import createStockAdjustmentTable from "./data/createStockAdjustmentTable.js";
 import createStockAdjustmentItemTable from "./data/createStockAdjustmentItemTable.js";
+import createCartTables from "./data/createCartTables.js";
+import createCheckoutSessionTables from "./data/createCheckoutSessionTables.js";
+import createOrderTables from "./data/createOrderTables.js";
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -71,12 +77,16 @@ app.use("/api", stockAdjustmentRoutes);
 
 app.use("/api", dashboardRoutes);
 
+app.use("/api", cartRoutes);
+app.use("/api", checkoutRoutes);
+app.use("/api", orderRoutes);
+
 app.use(errorHandler);
 
 // Create table before starting server
-createBranchInventoryTable();
+// createBranchInventoryTable();
 // createProductTable();
-createBranchTable();
+// createBranchTable();
 // createUserTable();
 // createRefreshTokenTable();
 // createStockMovementTable();
@@ -86,9 +96,12 @@ createBranchTable();
 // createCategoryTable();
 // createProductImagesTable();
 // createProductSpecificationsTable();
-createStockAdjustmentTable();
-createStockAdjustmentItemTable();
-createStockMovementTable();
+// createStockAdjustmentTable();
+// createStockAdjustmentItemTable();
+// createStockMovementTable();
+// createCartTables();
+// createCheckoutSessionTables();
+createOrderTables();
 
 // Testing postgres
 app.get("/", async (req, res) => {

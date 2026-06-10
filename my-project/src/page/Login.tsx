@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, LogIn, CheckCircle, Cpu } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useForm } from "../hooks/useForm";
 import { toast } from "react-toastify";
@@ -45,11 +45,14 @@ const LoginPage = () => {
           {/* Left Side - Hero Section */}
           <div className="hidden lg:flex flex-col justify-center">
             <div className="mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg mb-6">
                 <Cpu className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Welcome Back to <span className="text-gray-900">EasyPC</span>
+                Welcome Back to{" "}
+                <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  EasyPC
+                </span>
               </h1>
               <p className="text-gray-500 text-lg leading-relaxed">
                 Your one-stop shop for premium computer parts and gaming gear.
@@ -59,19 +62,19 @@ const LoginPage = () => {
 
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-gray-600">
-                <CheckCircle className="w-5 h-5 text-green-500" />
+                <CheckCircle className="w-5 h-5 text-indigo-500" />
                 <span>100% genuine products</span>
               </div>
               <div className="flex items-center gap-3 text-gray-600">
-                <CheckCircle className="w-5 h-5 text-green-500" />
+                <CheckCircle className="w-5 h-5 text-indigo-500" />
                 <span>Free shipping on orders ₱5,000+</span>
               </div>
               <div className="flex items-center gap-3 text-gray-600">
-                <CheckCircle className="w-5 h-5 text-green-500" />
+                <CheckCircle className="w-5 h-5 text-indigo-500" />
                 <span>24/7 customer support</span>
               </div>
               <div className="flex items-center gap-3 text-gray-600">
-                <CheckCircle className="w-5 h-5 text-green-500" />
+                <CheckCircle className="w-5 h-5 text-indigo-500" />
                 <span>7-day easy returns</span>
               </div>
             </div>
@@ -178,7 +181,7 @@ const LoginPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -245,12 +248,12 @@ const LoginPage = () => {
                 {/* Sign Up Link */}
                 <p className="text-center text-sm text-gray-500 mt-6">
                   Don't have an account?{" "}
-                  <a
-                    href="#"
+                  <Link
+                    to="/register"
                     className="text-gray-900 font-medium hover:underline"
                   >
                     Sign up
-                  </a>
+                  </Link>
                 </p>
               </form>
             </div>
