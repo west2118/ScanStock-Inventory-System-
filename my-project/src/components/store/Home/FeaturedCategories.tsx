@@ -12,7 +12,7 @@ const FeaturedCategories = ({ categories }: { categories: any }) => {
             >
               <div className="h-48">
                 <img
-                  src={category.image}
+                  src={category.imageUrl}
                   alt={category.name}
                   className="w-full h-full object-cover p-4 group-hover:scale-105 transition-transform"
                 />

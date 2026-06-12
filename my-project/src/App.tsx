@@ -26,6 +26,8 @@ import LoginPage from "./page/Login";
 import RegisterPage from "./page/Register";
 import StoreLayout from "./components/store/StoreLayout";
 import StockAdjustments from "./page/admin/StockAdjustments";
+import OrdersPage from "./page/store/Orders";
+import AdminOrdersPage from "./page/admin/Orders";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -38,6 +40,7 @@ const router = createBrowserRouter(
         <Route path="wishlist" element={<WishlistPage />} />
         <Route path="cart" element={<CartPage />} />
         <Route path="checkout/:id" element={<CheckoutPage />} />
+        <Route path="my-orders" element={<OrdersPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
       </Route>
@@ -71,6 +74,14 @@ const router = createBrowserRouter(
           element={
             <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
               <POSPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="orders"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
+              <AdminOrdersPage />
             </ProtectedRoute>
           }
         />

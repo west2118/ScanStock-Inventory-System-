@@ -2,6 +2,7 @@ import {
   ChevronDown,
   Cpu,
   Heart,
+  Package,
   Search,
   ShoppingCart,
   User,
@@ -14,7 +15,7 @@ const Navbar = () => {
       {/* Top Header */}
       <div className="bg-linear-to-r from-blue-600 to-indigo-600">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="h-16 flex items-center justify-between gap-6">
+          <div className="h-18 flex items-center justify-between gap-6">
             {/* Logo */}
             <div className="flex items-center gap-3 shrink-0">
               <div className="bg-white/10 p-2 rounded-lg">
@@ -30,7 +31,7 @@ const Navbar = () => {
                 <input
                   type="text"
                   placeholder="Search products..."
-                  className="w-full h-11 pl-12 pr-4 rounded-lg border border-white/20 bg-white text-gray-900"
+                  className="w-full h-10 pl-12 pr-4 rounded-full border border-white/20 bg-white text-gray-900"
                 />
               </div>
             </div>
@@ -42,6 +43,12 @@ const Navbar = () => {
               </Link>
               <Link to="cart" className="relative">
                 <ShoppingCart className="w-5 h-5 text-white cursor-pointer" />
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                  3
+                </span>
+              </Link>
+              <Link to="my-orders" className="relative">
+                <Package className="w-5 h-5 text-white cursor-pointer" />
                 <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
                   3
                 </span>

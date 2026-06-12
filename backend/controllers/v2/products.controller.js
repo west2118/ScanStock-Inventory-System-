@@ -3,7 +3,9 @@ import pool from "../../config/db.js";
 import {
   createProductService,
   findProductByBarcodeService,
+  getBestSellersService,
   getCollectionsService,
+  getNewArrivalsService,
   getProductByIdService,
   getProductsService,
   updateProductService,
@@ -117,4 +119,22 @@ export const getProductById = asyncHandler(async (req, res) => {
   const product = await getProductByIdService(id);
 
   return res.status(200).json(product);
+});
+
+export const getNewArrivals = asyncHandler(async (req, res) => {
+  const products = await getNewArrivalsService();
+
+  return res.status(200).json({
+    success: true,
+    products,
+  });
+});
+
+export const getBestSellers = asyncHandler(async (req, res) => {
+  const products = await getBestSellersService();
+
+  return res.status(200).json({
+    success: true,
+    products,
+  });
 });

@@ -1,6 +1,9 @@
 import { CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const OrderPlaced = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-16">
       <div className="max-w-md mx-auto px-4 text-center">
@@ -27,7 +30,10 @@ const OrderPlaced = () => {
               </span>
             </p>
           </div>
-          <button className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+          <button
+            onClick={() => navigate("/products")}
+            className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
             Continue Shopping
           </button>
         </div>

@@ -1,7 +1,25 @@
 import { Shield } from "lucide-react";
-import React from "react";
+import type { CheckoutItem } from "../../../utils/types";
+import { pesoFormatter } from "../../../utils/utils";
 
-const OrderSummary = ({ subtotal, shippingCost, total }: any) => {
+type OrderSummaryProps = {
+  cartItems: CheckoutItem[];
+  shippingFee: number;
+  discount: number;
+};
+
+const OrderSummary = ({
+  cartItems,
+  shippingFee,
+  discount,
+}: OrderSummaryProps) => {
+  const subtotal = cartItems?.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
+
+  const total = subtotal + shippingFee;
+
   return (
     <div className="lg:col-span-1">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-8">
@@ -12,15 +30,46 @@ const OrderSummary = ({ subtotal, shippingCost, total }: any) => {
         <div className="space-y-3 mb-4">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Subtotal</span>
-            <span className="text-gray-900">₱{subtotal.toLocaleString()}</span>
+            <span className="text-gray-900">
+              {pesoFormatter.format(subtotal)}
+            </span>
           </div>
+
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Shipping</span>
             <span className="text-gray-900">
-              {shippingCost === 0
+              {shippingFee === 0
                 ? "Free"
-                : `₱${shippingCost.toLocaleString()}`}
+                : `${pesoFormatter.format(shippingFee)}`}
             </span>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Discount Code
+            </label>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Enter promo code"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+
+              <button
+                type="button"
+                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Apply
+              </button>
+            </div>
+
+            <div className="flex justify-between text-sm mt-2">
+              <span className="text-gray-500">Discount Applied</span>
+              <span className="font-medium text-green-600">
+                -{pesoFormatter.format(discount)}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -28,7 +77,7 @@ const OrderSummary = ({ subtotal, shippingCost, total }: any) => {
           <div className="flex justify-between items-center">
             <span className="text-base font-semibold text-gray-900">Total</span>
             <span className="text-xl font-bold text-gray-900">
-              ₱{total.toLocaleString()}
+              {pesoFormatter.format(total)}
             </span>
           </div>
         </div>

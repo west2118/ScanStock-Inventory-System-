@@ -644,7 +644,7 @@ export const getCollectionsService = async ({
       p.created_at AS "createdAt",
 
       c.name AS "category",
-      b.name AS "brand",
+      b.name AS "brandName",
 
       COALESCE(bi.stock, 0) AS stock,
       COALESCE(bi.reserved_stock, 0) AS "reservedStock",
@@ -653,13 +653,13 @@ export const getCollectionsService = async ({
       COALESCE(bi.stock_critical, 0) AS "stockCritical",
       COALESCE(bi.stock_high, 0) AS "stockHigh",
 
-      (
-        SELECT image_url
-        FROM product_images
-        WHERE product_id = p.id
-        AND is_primary = true
-        LIMIT 1
-      ) AS "primaryImage"
+      ARRAY(
+        SELECT pi.image_url
+        FROM product_images pi
+        WHERE pi.product_id = p.id
+        ORDER BY pi.is_primary DESC, pi.sort_order ASC
+        LIMIT 2
+      ) AS images
 
     FROM products p
 
@@ -690,6 +690,120 @@ export const getCollectionsService = async ({
       totalPages: Math.ceil(total / limit),
     },
   };
+};
+
+// GET NEW ARRIVALS
+export const getNewArrivalsService = async () => {
+  const result = await pool.query(`
+    SELECT
+      p.id,
+      p.slug,
+      p.product_name AS "productName",
+      p.price,
+
+      c.name AS "categoryName",
+
+      b.name AS "brandName",
+
+      COALESCE(bi.stock, 0) AS stock,
+
+      ARRAY(
+        SELECT pi.image_url
+        FROM product_images pi
+        WHERE pi.product_id = p.id
+        ORDER BY pi.is_primary DESC, pi.sort_order ASC
+        LIMIT 2
+      ) AS images,
+
+      p.created_at AS "createdAt",
+      p.updated_at AS "updatedAt"
+
+    FROM products p
+
+    LEFT JOIN categories c
+      ON c.id = p.category_id
+
+    LEFT JOIN brands b
+      ON b.id = p.brand_id
+
+    LEFT JOIN branches br
+      ON br.branch_name = 'Central Warehouse'
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = br.id
+
+    WHERE p.status = 'active'
+
+    ORDER BY p.created_at DESC
+
+    LIMIT 8
+  `);
+
+  return result.rows;
+};
+
+// GET BEST SELLERS
+export const getBestSellersService = async () => {
+  const result = await pool.query(`
+    SELECT
+      p.id,
+      p.slug,
+      p.product_name AS "productName",
+      p.price,
+
+      c.name AS "categoryName",
+
+      b.name AS "brandName",
+
+      COALESCE(bi.stock, 0) AS stock,
+
+      ARRAY(
+        SELECT pi.image_url
+        FROM product_images pi
+        WHERE pi.product_id = p.id
+        ORDER BY pi.is_primary DESC, pi.sort_order ASC
+        LIMIT 2
+      ) AS images,
+
+      COALESCE(SUM(oi.quantity), 0)::INTEGER AS "totalSold",
+
+      p.created_at AS "createdAt",
+      p.updated_at AS "updatedAt"
+
+    FROM products p
+
+    LEFT JOIN order_items oi
+      ON oi.product_id = p.id
+
+    LEFT JOIN categories c
+      ON c.id = p.category_id
+
+    LEFT JOIN brands b
+      ON b.id = p.brand_id
+
+    LEFT JOIN branches br
+      ON br.branch_name = 'Central Warehouse'
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = br.id
+
+    WHERE p.status = 'active'
+
+    GROUP BY
+      p.id,
+      c.name,
+      b.name,
+      bi.stock
+
+    ORDER BY "totalSold" DESC,
+             p.created_at DESC
+
+    LIMIT 8
+  `);
+
+  return result.rows;
 };
 
 export const productSummaryStatsService = async () => {

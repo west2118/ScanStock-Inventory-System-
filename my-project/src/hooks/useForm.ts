@@ -11,7 +11,7 @@ export function useForm<T extends Record<string, any>>(initialValues: T) {
     }));
   };
 
-  const setField = (name: keyof T, value: any) => {
+  const setField = (name: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,

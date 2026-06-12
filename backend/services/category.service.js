@@ -176,33 +176,26 @@ export const deleteCategoryService = async (id) => {
   return result.rows[0] || null;
 };
 
-export const toggleSelectCartItemService = async ({
-  customerId,
-  productId,
-}) => {
-  const result = await pool.query(
-    `
-    UPDATE cart_items ci
-    SET
-      is_selected = NOT ci.is_selected,
-      updated_at = CURRENT_TIMESTAMP
-    FROM carts c
-    WHERE ci.cart_id = c.id
-      AND c.customer_id = $1
-      AND ci.product_id = $2
-    RETURNING
-      ci.id,
-      ci.product_id AS "productId",
-      ci.quantity,
-      ci.is_selected AS "isSelected",
-      ci.updated_at AS "updatedAt"
-    `,
-    [customerId, productId],
-  );
+export const getChildCategoriesService = async () => {
+  const result = await pool.query(`
+    SELECT 
+      c.id,
+      c.parent_id AS "parentId",
+      c.name,
+      c.status,
+      c.image_url AS "imageUrl",
+      c.created_at AS "createdAt",
+      c.updated_at AS "updatedAt"
+    FROM categories c
+    WHERE c.status = 'active'
+      AND c.parent_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM categories child
+        WHERE child.parent_id = c.id
+      )
+    ORDER BY c.name ASC
+  `);
 
-  if (result.rows.length === 0) {
-    throw new Error("Product not found in cart");
-  }
-
-  return result.rows[0];
+  return result.rows;
 };

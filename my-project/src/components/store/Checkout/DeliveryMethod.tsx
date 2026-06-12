@@ -1,14 +1,22 @@
 import { ChevronLeft, ChevronRight, Truck } from "lucide-react";
 import { deliveryMethods } from "../../../utils/constants";
+import type { CheckoutFormData } from "../../../utils/types";
+
+type DeliveryMethodProps = {
+  currentStep: number;
+  formData: CheckoutFormData;
+  setField: (name: string, value: any) => void;
+  handleNextStep: () => void;
+  handlePrevStep: () => void;
+};
 
 const DeliveryMethod = ({
-  deliveryMethod,
-  setDeliveryMethod,
+  formData,
+  setField,
   currentStep,
-  setCurrentStep,
   handlePrevStep,
   handleNextStep,
-}: any) => {
+}: DeliveryMethodProps) => {
   return (
     <div
       className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 ${currentStep !== 2 && "opacity-60"}`}
@@ -22,14 +30,14 @@ const DeliveryMethod = ({
             Delivery Method
           </h2>
         </div>
-        {currentStep > 2 && (
+        {/* {currentStep > 2 && (
           <button
             onClick={() => setCurrentStep(2)}
             className="text-sm text-blue-600 hover:text-blue-700"
           >
             Edit
           </button>
-        )}
+        )} */}
       </div>
 
       {currentStep === 2 ? (
@@ -39,7 +47,7 @@ const DeliveryMethod = ({
               <label
                 key={method.id}
                 className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                  deliveryMethod === method.id
+                  formData.deliveryMethod === method.id
                     ? "border-gray-900 bg-gray-50"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
@@ -49,8 +57,8 @@ const DeliveryMethod = ({
                     type="radio"
                     name="deliveryMethod"
                     value={method.id}
-                    checked={deliveryMethod === method.id}
-                    onChange={(e) => setDeliveryMethod(e.target.value)}
+                    checked={formData.deliveryMethod === method.id}
+                    onChange={(e) => setField("deliveryMethod", e.target.value)}
                     className="w-4 h-4 text-gray-900"
                   />
                   <div>
@@ -90,9 +98,17 @@ const DeliveryMethod = ({
         </div>
       ) : (
         <div className="text-sm text-gray-600">
-          <p>{deliveryMethods.find((m) => m.id === deliveryMethod)?.name}</p>
+          <p>
+            {
+              deliveryMethods.find((m) => m.id === formData.deliveryMethod)
+                ?.name
+            }
+          </p>
           <p className="text-gray-400 text-xs mt-1">
-            {deliveryMethods.find((m) => m.id === deliveryMethod)?.days}
+            {
+              deliveryMethods.find((m) => m.id === formData.deliveryMethod)
+                ?.days
+            }
           </p>
         </div>
       )}

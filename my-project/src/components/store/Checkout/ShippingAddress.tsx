@@ -1,18 +1,20 @@
 import { ChevronRight, MapPin } from "lucide-react";
 import React from "react";
+import type { CheckoutFormData } from "../../../utils/types";
+
+type ShippingAddressType = {
+  currentStep: number;
+  formData: CheckoutFormData;
+  handleAddressChange: (e: any) => void;
+  handleNextStep: () => void;
+};
 
 const ShippingAddress = ({
-  formData,
-  handleChange,
-  shippingAddress,
   currentStep,
-  setCurrentStep,
-  savedAddresses,
-  selectedSavedAddress,
-  setSelectedSavedAddress,
-  setShippingAddress,
+  formData,
+  handleAddressChange,
   handleNextStep,
-}: any) => {
+}: ShippingAddressType) => {
   return (
     <div
       className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 ${currentStep !== 1 && "opacity-60"}`}
@@ -26,14 +28,11 @@ const ShippingAddress = ({
             Shipping Address
           </h2>
         </div>
-        {currentStep > 1 && (
-          <button
-            onClick={() => setCurrentStep(1)}
-            className="text-sm text-blue-600 hover:text-blue-700"
-          >
+        {/* {currentStep > 1 && (
+          <button className="text-sm text-blue-600 hover:text-blue-700">
             Edit
           </button>
-        )}
+        )} */}
       </div>
 
       {currentStep === 1 ? (
@@ -95,8 +94,8 @@ const ShippingAddress = ({
               <input
                 type="text"
                 name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
+                value={formData.address.firstName}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="John"
               />
@@ -108,8 +107,8 @@ const ShippingAddress = ({
               <input
                 type="text"
                 name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
+                value={formData.address.lastName}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="Doe"
               />
@@ -121,8 +120,8 @@ const ShippingAddress = ({
               <input
                 type="email"
                 name="email"
-                value={formData.email}
-                onChange={handleChange}
+                value={formData.address.email}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="john@example.com"
               />
@@ -134,8 +133,8 @@ const ShippingAddress = ({
               <input
                 type="tel"
                 name="phone"
-                value={formData.phone}
-                onChange={handleChange}
+                value={formData.address.phone}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="0912 345 6789"
               />
@@ -147,8 +146,8 @@ const ShippingAddress = ({
               <input
                 type="text"
                 name="addressLine"
-                value={formData.addressLine}
-                onChange={handleChange}
+                value={formData.address.addressLine}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="123 Tech Avenue"
               />
@@ -160,8 +159,8 @@ const ShippingAddress = ({
               <input
                 type="text"
                 name="barangay"
-                value={formData.barangay}
-                onChange={handleChange}
+                value={formData.address.barangay}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="Makati Barangay"
               />
@@ -173,8 +172,8 @@ const ShippingAddress = ({
               <input
                 type="text"
                 name="city"
-                value={formData.city}
-                onChange={handleChange}
+                value={formData.address.city}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="Makati City"
               />
@@ -186,8 +185,8 @@ const ShippingAddress = ({
               <input
                 type="text"
                 name="province"
-                value={formData.province}
-                onChange={handleChange}
+                value={formData.address.province}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="Metro Manila"
               />
@@ -199,20 +198,20 @@ const ShippingAddress = ({
               <input
                 type="text"
                 name="postalCode"
-                value={formData.postalCode}
-                onChange={handleChange}
+                value={formData.address.postalCode}
+                onChange={handleAddressChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="1234"
               />
             </div>
-            <div className="col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Landmark
               </label>
               <textarea
                 name="landmark"
-                value={formData.landmark}
-                onChange={handleChange}
+                value={formData.address.landmark}
+                onChange={handleAddressChange}
                 className="w-full resize-none px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 placeholder="1234"
               />

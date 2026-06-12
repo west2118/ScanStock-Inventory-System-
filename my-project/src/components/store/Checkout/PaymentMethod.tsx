@@ -1,14 +1,22 @@
 import { ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
 import { paymentMethods } from "../../../utils/constants";
+import type { CheckoutFormData } from "../../../utils/types";
+
+type PaymentMethodProps = {
+  currentStep: number;
+  formData: CheckoutFormData;
+  setField: (name: string, value: any) => void;
+  handleNextStep: () => void;
+  handlePrevStep: () => void;
+};
 
 const PaymentMethod = ({
-  paymentMethod,
-  setPaymentMethod,
+  formData,
+  setField,
   currentStep,
-  setCurrentStep,
   handlePrevStep,
   handleNextStep,
-}: any) => {
+}: PaymentMethodProps) => {
   return (
     <div
       className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 ${currentStep !== 3 && "opacity-60"}`}
@@ -22,14 +30,14 @@ const PaymentMethod = ({
             Payment Method
           </h2>
         </div>
-        {currentStep > 3 && (
+        {/* {currentStep > 3 && (
           <button
             onClick={() => setCurrentStep(3)}
             className="text-sm text-blue-600 hover:text-blue-700"
           >
             Edit
           </button>
-        )}
+        )} */}
       </div>
 
       {currentStep === 3 ? (
@@ -41,7 +49,7 @@ const PaymentMethod = ({
                 <label
                   key={method.id}
                   className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                    paymentMethod === method.id
+                    formData.paymentMethod === method.id
                       ? "border-gray-900 bg-gray-50"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
@@ -51,8 +59,10 @@ const PaymentMethod = ({
                       type="radio"
                       name="paymentMethod"
                       value={method.id}
-                      checked={paymentMethod === method.id}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      checked={formData.paymentMethod === method.id}
+                      onChange={(e) =>
+                        setField("paymentMethod", e.target.value)
+                      }
                       className="w-4 h-4 text-gray-900"
                     />
                     <div>
@@ -91,7 +101,9 @@ const PaymentMethod = ({
         </div>
       ) : (
         <div className="text-sm text-gray-600">
-          <p>{paymentMethods.find((m) => m.id === paymentMethod)?.name}</p>
+          <p>
+            {paymentMethods.find((m) => m.id === formData.paymentMethod)?.name}
+          </p>
         </div>
       )}
     </div>

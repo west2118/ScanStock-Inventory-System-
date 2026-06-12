@@ -3,8 +3,8 @@ import {
   addCartService,
   minusCartService,
   removeCartItemService,
+  toggleSelectCartItemService,
 } from "../../services/cart.service.js";
-import { toggleSelectCartItemService } from "../../services/category.service.js";
 import { asyncHandler } from "../../utils/helper.js";
 
 export const getCart = asyncHandler(async (req, res) => {

@@ -8,8 +8,33 @@ import NewArrivals from "../../components/store/Home/NewArrivals";
 import FeaturedBrands from "../../components/store/Home/FeaturedBrands";
 import FeaturedBranches from "../../components/store/Home/FeaturedBranches";
 import Testimonials from "../../components/store/Home/Testimonials";
+import { fetchData } from "../../utils/utils";
+import { useQuery } from "@tanstack/react-query";
 
 const Home = () => {
+  const { data: categoriesResponse, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["categories-child-data"],
+    queryFn: fetchData(`${import.meta.env.VITE_API_URL}/categories/childrens`),
+  });
+
+  const { data: bestSellersResponse, isLoading: bestSellersLoading } = useQuery(
+    {
+      queryKey: ["best-sellers"],
+      queryFn: fetchData(
+        `${import.meta.env.VITE_API_URL}/products/best-sellers`,
+      ),
+    },
+  );
+
+  const { data: newArrivalsResponse, isLoading: newArrivalsLoading } = useQuery(
+    {
+      queryKey: ["new-arrivals"],
+      queryFn: fetchData(
+        `${import.meta.env.VITE_API_URL}/products/new-arrivals`,
+      ),
+    },
+  );
+
   // Featured Products
   const featuredProducts = [
     {
@@ -63,121 +88,6 @@ const Home = () => {
         "https://images.unsplash.com/photo-1562976540-1502c2145186?w=300&h=200&fit=crop",
       badge: "Sale",
       badgeColor: "bg-red-500",
-    },
-  ];
-
-  // Best Sellers
-  const bestSellers = [
-    {
-      id: 5,
-      name: "Logitech G502 X Plus",
-      brand: "Logitech",
-      price: 5495,
-      sold: 1245,
-      rating: 4.9,
-      image:
-        "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=300&h=200&fit=crop",
-    },
-    {
-      id: 6,
-      name: "Razer BlackWidow V4 Pro",
-      brand: "Razer",
-      price: 8995,
-      sold: 892,
-      rating: 4.8,
-      image:
-        "https://images.unsplash.com/photo-1618384887929-16ec33b7f5b8?w=300&h=200&fit=crop",
-    },
-    {
-      id: 7,
-      name: 'LG UltraGear 27" 240Hz',
-      brand: "LG",
-      price: 24995,
-      sold: 567,
-      rating: 4.9,
-      image:
-        "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=300&h=200&fit=crop",
-    },
-    {
-      id: 8,
-      name: "NZXT H9 Flow Case",
-      brand: "NZXT",
-      price: 7995,
-      sold: 445,
-      rating: 4.7,
-      image:
-        "https://images.unsplash.com/photo-1591488322449-7f9c3fd4c5f5?w=300&h=200&fit=crop",
-    },
-  ];
-
-  // New Arrivals
-  const newArrivals = [
-    {
-      id: 9,
-      name: "AMD Ryzen 7 7800X3D",
-      brand: "AMD",
-      price: 27995,
-      launchDate: "New",
-      image:
-        "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=300&h=200&fit=crop",
-    },
-    {
-      id: 10,
-      name: "RTX 4070 Ti Super",
-      brand: "MSI",
-      price: 68995,
-      launchDate: "Just Launched",
-      image:
-        "https://images.unsplash.com/photo-1591488322449-7f9c3fd4c5f5?w=300&h=200&fit=crop",
-    },
-    {
-      id: 11,
-      name: "SteelSeries Arctis Nova Pro",
-      brand: "SteelSeries",
-      price: 15995,
-      launchDate: "New",
-      image:
-        "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=300&h=200&fit=crop",
-    },
-  ];
-
-  // Categories
-  const categories = [
-    {
-      name: "Gaming PC",
-      image:
-        "https://ecommerce.datablitz.com.ph/cdn/shop/files/GeForceRTX_3050WINDFORCEOCV28G-07.jpg?v=1761275844",
-      count: 120,
-    },
-    {
-      name: "Laptop",
-      image:
-        "https://ecommerce.datablitz.com.ph/cdn/shop/files/GeForceRTX_3050WINDFORCEOCV28G-07.jpg?v=1761275844",
-      count: 85,
-    },
-    {
-      name: "Graphics Card",
-      image:
-        "https://ecommerce.datablitz.com.ph/cdn/shop/files/GeForceRTX_3050WINDFORCEOCV28G-07.jpg?v=1761275844",
-      count: 65,
-    },
-    {
-      name: "Monitor",
-      image:
-        "https://ecommerce.datablitz.com.ph/cdn/shop/files/GeForceRTX_3050WINDFORCEOCV28G-07.jpg?v=1761275844",
-      count: 42,
-    },
-    {
-      name: "Processor",
-      image:
-        "https://ecommerce.datablitz.com.ph/cdn/shop/files/GeForceRTX_3050WINDFORCEOCV28G-07.jpg?v=1761275844",
-      count: 35,
-    },
-    {
-      name: "Motherboard",
-      image:
-        "https://ecommerce.datablitz.com.ph/cdn/shop/files/GeForceRTX_3050WINDFORCEOCV28G-07.jpg?v=1761275844",
-      count: 28,
     },
   ];
 
@@ -267,90 +177,25 @@ const Home = () => {
     },
   ];
 
-  const ProductCard = ({ product, showBadge = true }) => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 group">
-      <div className="relative">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        {showBadge && product.badge && (
-          <span
-            className={`absolute top-2 left-2 ${product.badgeColor} text-white text-xs px-2 py-1 rounded-full`}
-          >
-            {product.badge}
-          </span>
-        )}
-        <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors">
-          <Heart className="w-4 h-4 text-gray-400 hover:text-red-500" />
-        </button>
-      </div>
-      <div className="p-4">
-        <p className="text-xs text-gray-500 mb-1">{product.brand}</p>
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-          {product.name}
-        </h3>
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium">{product.rating}</span>
-          </div>
-          <span className="text-xs text-gray-400">
-            ({product.reviews?.toLocaleString()} reviews)
-          </span>
-        </div>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xl font-bold text-gray-900">
-            ₱{product.price.toLocaleString()}
-          </span>
-          {product.originalPrice && (
-            <span className="text-sm text-gray-400 line-through">
-              ₱{product.originalPrice.toLocaleString()}
-            </span>
-          )}
-        </div>
-        {product.sold && (
-          <p className="text-xs text-gray-500 mb-3">
-            {product.sold.toLocaleString()} sold this month
-          </p>
-        )}
-        <button className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-          <ShoppingCart className="w-4 h-4" />
-          Add to Cart
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Banner */}
       <HeroBanner />
 
-      {/* Shop by Category */}
-      <FeaturedCategories categories={categories} />
+      <FeaturedCategories categories={categoriesResponse?.categories ?? []} />
 
-      {/* Featured Products */}
-      <FeaturedProducts featuredProducts={featuredProducts} />
+      {/* <FeaturedProducts featuredProducts={featuredProducts} /> */}
 
-      {/* Promotional Banner 1 */}
       <PromotionalBanner promoBanners={promoBanners} />
 
-      {/* Best Sellers */}
-      <BestSellers bestSellers={bestSellers} />
+      <BestSellers bestSellers={bestSellersResponse?.products ?? []} />
 
-      {/* New Arrivals */}
-      <NewArrivals newArrivals={featuredProducts} />
+      {/* <NewArrivals newArrivals={featuredProducts} />
 
-      {/* Featured Brands */}
       <FeaturedBrands brands={brands} />
 
-      {/* Branch Availability */}
       <FeaturedBranches branches={branches} />
 
-      {/* Testimonials */}
-      <Testimonials testimonials={testimonials} />
+      <Testimonials testimonials={testimonials} /> */}
     </div>
   );
 };

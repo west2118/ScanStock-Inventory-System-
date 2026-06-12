@@ -267,3 +267,41 @@ export type CartItem = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type CheckoutItem = {
+  id: number;
+  productId: number;
+
+  imageUrl: string;
+  brandName: string;
+  productName: string;
+  slug: string;
+  sku: string;
+  barcode: string;
+
+  price: number;
+  currentPrice: string;
+
+  quantity: number;
+
+  vatType: "vatable" | "zero-rated" | "exempt";
+};
+
+export type CheckoutFormData = {
+  address: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    addressLine: string;
+    barangay: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    landmark: string;
+  };
+  deliveryMethod: string;
+  paymentMethod: string;
+  notes: string;
+  discountAmount: number;
+};

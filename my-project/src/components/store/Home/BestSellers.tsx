@@ -1,6 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import React from "react";
-import ProductCard from "../UI/ProductCard";
+import ProductsProductCard from "../Products/ProductsProductCard";
 
 const BestSellers = ({ bestSellers }: { bestSellers: any }) => {
   return (
@@ -17,9 +16,9 @@ const BestSellers = ({ bestSellers }: { bestSellers: any }) => {
             View All <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {bestSellers.map((product) => (
-            <ProductCard key={product.id} product={product} showBadge={false} />
+            <ProductsProductCard key={product.id} product={product} />
           ))}
         </div>
       </div>

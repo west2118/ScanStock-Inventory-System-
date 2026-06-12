@@ -3,6 +3,7 @@ import pool from "../config/db.js";
 export const createOrderService = async ({
   customerId,
   deliveryMethod,
+  paymentMethod,
   notes,
   items,
   address,
@@ -13,6 +14,8 @@ export const createOrderService = async ({
 
   try {
     await client.query("BEGIN");
+
+    const fullName = `${address.firstName} ${address.lastName}`;
 
     if (!items || items.length === 0) {
       throw new Error("Order items are required");
@@ -137,6 +140,28 @@ export const createOrderService = async ({
 
     const order = orderResult.rows[0];
 
+    await client.query(
+      `
+      INSERT INTO order_payments (
+        order_id,
+        payment_method,
+        transaction_id,
+        amount,
+        payment_status,
+        paid_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      `,
+      [
+        order.id,
+        paymentMethod,
+        null,
+        totalAmount,
+        paymentMethod === "cod" ? "pending" : "pending",
+        null,
+      ],
+    );
+
     for (const item of items) {
       const itemSubtotal = Number(item.price) * Number(item.quantity);
 
@@ -195,7 +220,7 @@ export const createOrderService = async ({
       `,
       [
         order.id,
-        address.fullName,
+        fullName,
         address.email,
         address.phone,
         address.addressLine,
@@ -221,6 +246,20 @@ export const createOrderService = async ({
       [order.id, null, "pending", "Order placed by customer", customerId],
     );
 
+    await client.query(
+      `
+      DELETE FROM cart_items
+      WHERE cart_id = (
+        SELECT id
+        FROM carts
+        WHERE customer_id = $1
+        LIMIT 1
+      )
+      AND product_id = ANY($2::int[])
+      `,
+      [customerId, items.map((item) => item.productId)],
+    );
+
     await client.query("COMMIT");
 
     return {
@@ -233,4 +272,115 @@ export const createOrderService = async ({
   } finally {
     client.release();
   }
+};
+
+export const getCustomerOrdersService = async ({
+  customerId,
+  page = 1,
+  limit = 10,
+}) => {
+  const offset = (page - 1) * limit;
+
+  const countResult = await pool.query(
+    `
+    SELECT COUNT(*) AS total
+    FROM orders
+    WHERE customer_id = $1
+    `,
+    [customerId],
+  );
+
+  const total = Number(countResult.rows[0].total);
+
+  const result = await pool.query(
+    `
+    SELECT
+      o.id,
+      o.order_number AS "orderNumber",
+
+      o.subtotal AS "subtotal",
+      o.shipping_fee AS "shippingFee",
+      o.discount_amount AS "discountAmount",
+      o.tax_amount AS "taxAmount",
+      o.total_amount AS "totalAmount",
+      o.net_sales AS "netSales",
+
+      o.delivery_method AS "deliveryMethod",
+      o.order_status AS "orderStatus",
+      o.notes,
+
+      op.payment_method AS "paymentMethod",
+      op.payment_status AS "paymentStatus",
+      op.transaction_id AS "transactionId",
+      op.amount AS "paymentAmount",
+      op.paid_at AS "paidAt",
+
+      o.placed_at AS "placedAt",
+      o.created_at AS "createdAt",
+
+      json_build_object(
+        'fullName', oa.full_name,
+        'email', oa.email,
+        'phone', oa.phone,
+        'addressLine', oa.address_line,
+        'barangay', oa.barangay,
+        'city', oa.city,
+        'province', oa.province,
+        'postalCode', oa.postal_code,
+        'landmark', oa.landmark
+      ) AS address,
+
+      (
+        SELECT COALESCE(
+          json_agg(
+            json_build_object(
+              'id', oi.id,
+              'productId', oi.product_id,
+              'sku', oi.sku,
+              'productName', oi.product_name,
+              'price', oi.price,
+              'quantity', oi.quantity,
+              'subtotal', oi.subtotal,
+              'imageUrl',
+              (
+                SELECT pi.image_url
+                FROM product_images pi
+                WHERE pi.product_id = oi.product_id
+                AND pi.is_primary = true
+                LIMIT 1
+              )
+            )
+          ),
+          '[]'
+        )
+        FROM order_items oi
+        WHERE oi.order_id = o.id
+      ) AS items
+
+    FROM orders o
+
+    LEFT JOIN order_addresses oa
+      ON oa.order_id = o.id
+
+    LEFT JOIN order_payments op
+      ON op.order_id = o.id
+
+    WHERE o.customer_id = $1
+
+    ORDER BY o.created_at DESC
+
+    LIMIT $2 OFFSET $3
+    `,
+    [customerId, limit, offset],
+  );
+
+  return {
+    orders: result.rows,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };

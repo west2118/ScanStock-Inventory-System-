@@ -1,18 +1,21 @@
 import { ChevronLeft, Lock, Package } from "lucide-react";
-import React from "react";
+import type { CheckoutFormData, CheckoutItem } from "../../../utils/types";
+import { pesoFormatter } from "../../../utils/utils";
+import { deliveryMethods, paymentMethods } from "../../../utils/constants";
+
+type ReviewOrderProps = {
+  cartItems: CheckoutItem[];
+  formData: CheckoutFormData;
+  handlePrevStep: () => void;
+  handleSubmitOrder: () => void;
+};
 
 const ReviewOrder = ({
   cartItems,
-  selectedSavedAddress,
-  shippingAddress,
-  deliveryMethods,
-  deliveryMethod,
-  paymentMethods,
-  paymentMethod,
+  formData,
   handlePrevStep,
-  handlePlaceOrder,
   handleSubmitOrder,
-}: any) => {
+}: ReviewOrderProps) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center gap-2 mb-5">
@@ -32,17 +35,18 @@ const ReviewOrder = ({
               className="flex items-center gap-3 py-2 border-b border-gray-100"
             >
               <img
-                src={item.image}
-                alt={item.name}
-                className="w-12 h-12 rounded-lg object-cover"
+                src={item.imageUrl}
+                className="w-12 h-12 rounded-lg object-cover border border-gray-100"
               />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                <p className="text-xs text-gray-500">{item.brand}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {item.productName}
+                </p>
+                <p className="text-xs text-gray-500">{item.brandName}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">
-                  ₱{item.price.toLocaleString()}
+                  {pesoFormatter.format(item.price)}
                 </p>
                 <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
               </div>
@@ -55,11 +59,10 @@ const ReviewOrder = ({
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <h3 className="font-medium text-gray-900 mb-2">Shipping Information</h3>
         <p className="text-sm text-gray-600">
-          {selectedSavedAddress?.address ||
-            `${shippingAddress.address}, ${shippingAddress.city}`}
+          {`${formData.address.addressLine}, ${formData.address.city}`}
         </p>
         <p className="text-sm text-gray-500 mt-1">
-          {deliveryMethods.find((m) => m.id === deliveryMethod)?.name}
+          {deliveryMethods.find((m) => m.id === formData.deliveryMethod)?.name}
         </p>
       </div>
 
@@ -67,7 +70,7 @@ const ReviewOrder = ({
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <h3 className="font-medium text-gray-900 mb-2">Payment Method</h3>
         <p className="text-sm text-gray-600">
-          {paymentMethods.find((m) => m.id === paymentMethod)?.name}
+          {paymentMethods.find((m) => m.id === formData.paymentMethod)?.name}
         </p>
       </div>
 

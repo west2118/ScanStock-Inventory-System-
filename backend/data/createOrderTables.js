@@ -24,6 +24,7 @@ const createOrderTables = async () => {
 
       delivery_method VARCHAR(50) NOT NULL,
 
+      payment_status VARCHAR(50) NOT NULL DEFAULT 'pending',
       order_status VARCHAR(50) NOT NULL DEFAULT 'pending',
 
       notes TEXT,
@@ -101,6 +102,28 @@ const createOrderTables = async () => {
       changed_by INT
         REFERENCES users(id)
         ON DELETE SET NULL,
+
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS order_payments (
+      id SERIAL PRIMARY KEY,
+
+      order_id INT NOT NULL
+        REFERENCES orders(id)
+        ON DELETE CASCADE,
+
+      payment_method VARCHAR(50) NOT NULL,
+
+      transaction_id VARCHAR(255),
+
+      amount NUMERIC(12,2) NOT NULL
+        CHECK (amount >= 0),
+
+      payment_status VARCHAR(50) NOT NULL
+        DEFAULT 'pending',
+
+      paid_at TIMESTAMPTZ,
 
       created_at TIMESTAMPTZ DEFAULT NOW()
     );

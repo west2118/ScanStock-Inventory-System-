@@ -6,6 +6,8 @@ const createCategoryTable = async () => {
       id SERIAL PRIMARY KEY,
       parent_id INT REFERENCES categories(id) ON DELETE SET NULL,
 
+      image_url TEXT NOT NULL,
+
       name VARCHAR(255) NOT NULL,
       status VARCHAR(50) DEFAULT 'active',
 

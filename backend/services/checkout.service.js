@@ -69,3 +69,48 @@ export const createCheckoutService = async (customerId) => {
     client.release();
   }
 };
+
+export const getCheckoutSessionItemsService = async (checkoutSessionId) => {
+  const query = `
+    SELECT
+      csi.id,
+      csi.product_id AS "productId",
+      csi.quantity,
+      csi.price,
+
+      p.sku,
+      p.barcode,
+      p.slug,
+      p.product_name AS "productName",
+      p.price AS "currentPrice",
+      p.vat_type AS "vatType",
+
+      b.name AS "brandName",
+
+      pi.image_url AS "imageUrl"
+
+    FROM checkout_session_items csi
+
+    INNER JOIN products p
+      ON p.id = csi.product_id
+
+    LEFT JOIN brands b
+      ON b.id = p.brand_id
+
+    LEFT JOIN LATERAL (
+      SELECT image_url
+      FROM product_images
+      WHERE product_id = p.id
+      ORDER BY id ASC
+      LIMIT 1
+    ) pi ON TRUE
+
+    WHERE csi.checkout_session_id = $1
+
+    ORDER BY csi.id ASC;
+  `;
+
+  const { rows } = await pool.query(query, [checkoutSessionId]);
+
+  return rows;
+};

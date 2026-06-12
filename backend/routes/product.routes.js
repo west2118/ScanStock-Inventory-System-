@@ -12,7 +12,9 @@ import {
   createProduct,
   deleteProduct,
   findProductByBarcode,
+  getBestSellers,
   getCollections,
+  getNewArrivals,
   getProductById,
   getProducts,
   updateProduct,
@@ -37,6 +39,8 @@ router.get(
   authorizeRoles("admin", "branch_manager", "staff"),
   findProductByBarcode,
 );
+router.get("/products/new-arrivals", getNewArrivals);
+router.get("/products/best-sellers", getBestSellers);
 
 // router.put(
 //   "/product/:id",

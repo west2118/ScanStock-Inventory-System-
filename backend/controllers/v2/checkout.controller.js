@@ -1,4 +1,7 @@
-import { createCheckoutService } from "../../services/checkout.service.js";
+import {
+  createCheckoutService,
+  getCheckoutSessionItemsService,
+} from "../../services/checkout.service.js";
 import { asyncHandler } from "../../utils/helper.js";
 
 export const createCheckout = asyncHandler(async (req, res) => {
@@ -10,4 +13,10 @@ export const createCheckout = asyncHandler(async (req, res) => {
     message: "Checkout session created",
     ...checkout,
   });
+});
+
+export const getCheckoutSessionItems = asyncHandler(async (req, res) => {
+  const items = await getCheckoutSessionItemsService(req.params.id);
+
+  return res.status(200).json(items);
 });

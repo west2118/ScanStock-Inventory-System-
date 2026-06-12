@@ -12,7 +12,7 @@ const ProductsProductCard = ({ product }: { product: ProductType }) => {
     >
       <div className="relative">
         <img
-          src={product.primaryImage}
+          src={product.images[0]}
           alt={product.productName}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -34,7 +34,7 @@ const ProductsProductCard = ({ product }: { product: ProductType }) => {
         )}
       </div>
       <div className="p-4 flex flex-col flex-1">
-        <p className="text-xs text-gray-500 mb-1">{product.brand}</p>
+        <p className="text-xs text-gray-500 mb-1">{product.brandName}</p>
 
         <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm">
           {product.productName}

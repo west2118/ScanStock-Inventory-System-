@@ -226,3 +226,34 @@ export const removeCartItemService = async ({ customerId, productId }) => {
 
   return result.rows[0];
 };
+
+export const toggleSelectCartItemService = async ({
+  customerId,
+  productId,
+}) => {
+  const result = await pool.query(
+    `
+    UPDATE cart_items ci
+    SET
+      is_selected = NOT ci.is_selected,
+      updated_at = CURRENT_TIMESTAMP
+    FROM carts c
+    WHERE ci.cart_id = c.id
+      AND c.customer_id = $1
+      AND ci.product_id = $2
+    RETURNING
+      ci.id,
+      ci.product_id AS "productId",
+      ci.quantity,
+      ci.is_selected AS "isSelected",
+      ci.updated_at AS "updatedAt"
+    `,
+    [customerId, productId],
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error("Product not found in cart");
+  }
+
+  return result.rows[0];
+};

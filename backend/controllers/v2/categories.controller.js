@@ -4,6 +4,7 @@ import {
   getCategoriesService,
   getCategoryByIdService,
   updateCategoryService,
+  getChildCategoriesService,
 } from "../../services/category.service.js";
 import { asyncHandler } from "../../utils/helper.js";
 
@@ -76,5 +77,14 @@ export const deleteCategory = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Category deleted successfully",
+  });
+});
+
+export const getChildCategories = asyncHandler(async (req, res) => {
+  const categories = await getChildCategoriesService();
+
+  return res.status(200).json({
+    success: true,
+    categories,
   });
 });
