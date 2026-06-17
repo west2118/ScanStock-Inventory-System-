@@ -35,73 +35,21 @@ const Home = () => {
     },
   );
 
-  // Featured Products
-  const featuredProducts = [
+  const { data: featuredResponse, isLoading: featuredLoading } = useQuery(
     {
-      id: 1,
-      name: "ASUS ROG Strix RTX 4090",
-      brand: "ASUS",
-      price: 124995,
-      originalPrice: 139995,
-      rating: 4.9,
-      reviews: 128,
-      image:
-        "https://images.unsplash.com/photo-1591488322449-7f9c3fd4c5f5?w=300&h=200&fit=crop",
-      badge: "Best Seller",
-      badgeColor: "bg-yellow-500",
+      queryKey: ["featured-products"],
+      queryFn: fetchData(
+        `${import.meta.env.VITE_API_URL}/products/featured`,
+      ),
     },
-    {
-      id: 2,
-      name: "Intel Core i9-13900K",
-      brand: "Intel",
-      price: 32995,
-      originalPrice: 35995,
-      rating: 4.8,
-      reviews: 256,
-      image:
-        "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=300&h=200&fit=crop",
-      badge: "Top Rated",
-      badgeColor: "bg-blue-500",
-    },
-    {
-      id: 3,
-      name: "Samsung 990 Pro 2TB NVMe",
-      brand: "Samsung",
-      price: 12995,
-      originalPrice: 15995,
-      rating: 4.9,
-      reviews: 89,
-      image:
-        "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=300&h=200&fit=crop",
-      badge: "New",
-      badgeColor: "bg-green-500",
-    },
-    {
-      id: 4,
-      name: "Corsair Vengeance 32GB DDR5",
-      brand: "Corsair",
-      price: 8995,
-      originalPrice: 10995,
-      rating: 4.7,
-      reviews: 312,
-      image:
-        "https://images.unsplash.com/photo-1562976540-1502c2145186?w=300&h=200&fit=crop",
-      badge: "Sale",
-      badgeColor: "bg-red-500",
-    },
-  ];
+  );
 
-  // Brands
-  const brands = [
-    { name: "ASUS", logo: "ASUS", products: 156 },
-    { name: "MSI", logo: "MSI", products: 134 },
-    { name: "Gigabyte", logo: "Gigabyte", products: 112 },
-    { name: "Corsair", logo: "Corsair", products: 98 },
-    { name: "Samsung", logo: "Samsung", products: 87 },
-    { name: "Logitech", logo: "Logitech", products: 76 },
-    { name: "Razer", logo: "Razer", products: 65 },
-    { name: "Intel", logo: "Intel", products: 54 },
-  ];
+  const { data: branchesResponse, isLoading: branchesLoading } = useQuery({
+    queryKey: ["branches-data"],
+    queryFn: fetchData(`${import.meta.env.VITE_API_URL}/branches`),
+  });
+
+  const dynamicFeaturedProducts = featuredResponse?.products ?? [];
 
   // Branches
   const branches = [
@@ -146,7 +94,7 @@ const Home = () => {
       name: "Maria Santos",
       role: "Content Creator",
       rating: 5,
-      text: "Fast delivery and genuine products. Built my entire editing rig from EasyPC. Highly recommended!",
+      text: "Fast delivery and genuine products. Built my entire editing rig from ByteForge. Highly recommended!",
       image: "https://randomuser.me/api/portraits/women/2.jpg",
     },
     {
@@ -178,24 +126,22 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <HeroBanner />
 
       <FeaturedCategories categories={categoriesResponse?.categories ?? []} />
 
-      {/* <FeaturedProducts featuredProducts={featuredProducts} /> */}
+      <FeaturedProducts featuredProducts={dynamicFeaturedProducts} />
 
       <PromotionalBanner promoBanners={promoBanners} />
 
       <BestSellers bestSellers={bestSellersResponse?.products ?? []} />
 
-      {/* <NewArrivals newArrivals={featuredProducts} />
-
-      <FeaturedBrands brands={brands} />
+      <NewArrivals newArrivals={newArrivalsResponse?.products ?? []} />
 
       <FeaturedBranches branches={branches} />
 
-      <Testimonials testimonials={testimonials} /> */}
+      <Testimonials testimonials={testimonials} />
     </div>
   );
 };

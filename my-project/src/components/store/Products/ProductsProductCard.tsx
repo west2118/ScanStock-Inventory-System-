@@ -1,9 +1,47 @@
 import { Heart, ShoppingCart, ShoppingCartIcon, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { ProductType } from "../../../utils/types";
+import { useAuth } from "../../../context/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchData, fetchWithAuth } from "../../../utils/utils";
 
 const ProductsProductCard = ({ product }: { product: ProductType }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: wishlistItems = [] } = useQuery({
+    queryKey: ["wishlist"],
+    queryFn: fetchData("http://localhost:5001/api/wishlist"),
+    enabled: !!user,
+  });
+
+  const isFavorited = Array.isArray(wishlistItems) 
+    ? wishlistItems.some((item: any) => item.id === product.id)
+    : false;
+
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) return; 
+      if (isFavorited) {
+        const res = await fetchWithAuth(`http://localhost:5001/api/wishlist/${product.id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error("Failed to remove");
+      } else {
+        const res = await fetchWithAuth(`http://localhost:5001/api/wishlist`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: product.id }),
+        });
+        if (!res.ok) throw new Error("Failed to add");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      queryClient.invalidateQueries({ queryKey: ["wishlist-count"] });
+    }
+  });
 
   return (
     <div
@@ -20,11 +58,16 @@ const ProductsProductCard = ({ product }: { product: ProductType }) => {
         {/* Wishlist Button */}
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
+            if (user) {
+              toggleFavoriteMutation.mutate();
+            }
           }}
+          disabled={toggleFavoriteMutation.isPending}
           className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
         >
-          <Heart className="w-4 h-4 text-gray-400 hover:text-red-500" />
+          <Heart className={`w-4 h-4 ${isFavorited ? "fill-red-500 text-red-500" : "text-gray-400 hover:text-red-500"}`} />
         </button>
 
         {product.stock < 10 && (

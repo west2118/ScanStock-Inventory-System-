@@ -183,10 +183,13 @@ export const formatNumber = (value: number) => {
 };
 
 export const getDefaultRouteByRole = (role: string) => {
-  const normalized = role.toLowerCase() as "admin" | "staff";
+  const normalized = role.toLowerCase();
 
-  const routes = {
+  const routes: any = {
     admin: "/admin",
+    central_admin: "/central_admin",
+    cashier: "/cashier",
+    inventory_staff: "/inventory_staff",
     branch_manager: "/branch_manager",
     staff: "/staff/scan",
   };

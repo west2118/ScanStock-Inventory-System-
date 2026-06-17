@@ -1,5 +1,11 @@
 import { Search } from "lucide-react";
-const OrdersHeader = () => {
+
+type OrdersHeaderProps = {
+  search: string;
+  onSearchChange: (value: string) => void;
+};
+
+const OrdersHeader = ({ search, onSearchChange }: OrdersHeaderProps) => {
   return (
     <div className="mb-6 flex items-center justify-between">
       <div>
@@ -17,6 +23,8 @@ const OrdersHeader = () => {
             type="text"
             placeholder="Search by order ID or product name..."
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
       </div>

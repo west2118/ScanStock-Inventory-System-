@@ -7,9 +7,19 @@ import {
 import type { OrderType } from "../../../types/order.types";
 import OrdersItemCard from "./OrdersItemCard";
 
-type OrderListCardProps = { order: OrderType; getStatusBadge: any };
+type OrderListCardProps = {
+  order: OrderType;
+  getStatusBadge: any;
+  getActionButtons: any;
+  onViewDetails: (order: OrderType) => void;
+};
 
-const OrderListCard = ({ order, getStatusBadge }: OrderListCardProps) => {
+const OrderListCard = ({
+  order,
+  getStatusBadge,
+  getActionButtons,
+  onViewDetails,
+}: OrderListCardProps) => {
   const statusBadge = getStatusBadge(order.orderStatus);
 
   return (
@@ -47,10 +57,10 @@ const OrderListCard = ({ order, getStatusBadge }: OrderListCardProps) => {
         </div>
         <div>
           <span
-            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${statusBadge.bg} ${statusBadge.text}`}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${statusBadge?.bg} ${statusBadge?.text}`}
           >
-            {statusBadge.icon}
-            {statusBadge.label}
+            {statusBadge?.icon}
+            {statusBadge?.label}
           </span>
         </div>
       </div>
@@ -58,7 +68,7 @@ const OrderListCard = ({ order, getStatusBadge }: OrderListCardProps) => {
       {/* Order Items */}
       <div className="divide-y divide-gray-100">
         {order.items.map((item) => (
-          <OrdersItemCard item={item} />
+          <OrdersItemCard key={item.id} item={item} />
         ))}
       </div>
 
@@ -72,11 +82,14 @@ const OrderListCard = ({ order, getStatusBadge }: OrderListCardProps) => {
           </span>
         </div>
         <div className="flex gap-3">
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center gap-1">
+          <button
+            onClick={() => onViewDetails(order)}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center gap-1"
+          >
             <Eye size={14} />
             View Details
           </button>
-          {/* {getActionButtons(order)} */}
+          {getActionButtons(order)}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { ChevronRight, ShoppingCart } from "lucide-react";
 import React from "react";
-import ProductCard from "../UI/ProductCard";
+import ProductCarousel from "./ProductCarousel";
 
 const NewArrivals = ({ newArrivals }: { newArrivals: any }) => {
   return (
@@ -17,11 +17,7 @@ const NewArrivals = ({ newArrivals }: { newArrivals: any }) => {
             View All <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {newArrivals.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <ProductCarousel products={newArrivals} />
       </div>
     </section>
   );

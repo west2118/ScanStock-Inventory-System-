@@ -1,6 +1,6 @@
 // ProductDetailsPage.jsx
 import { useState } from "react";
-import { Star, CheckCircle } from "lucide-react";
+import { Star, CheckCircle, ThumbsUp, Flag } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchData } from "../../utils/utils";
 import { useParams } from "react-router-dom";
@@ -17,45 +17,11 @@ const ProductDetailsPage = () => {
     enabled: !!id,
   });
 
-  // Reviews Data
-  const reviews = [
-    {
-      id: 1,
-      user: "John Reyes",
-      avatar: "JR",
-      rating: 5,
-      date: "2024-01-15",
-      title: "Incredible performance!",
-      content:
-        "This card is an absolute beast. Upgraded from a 3080 and the difference is night and day. 4K gaming with max settings no problem. Runs surprisingly cool considering the power.",
-      helpful: 45,
-      verified: true,
-    },
-    {
-      id: 2,
-      user: "Maria Santos",
-      avatar: "MS",
-      rating: 5,
-      date: "2024-01-10",
-      title: "Worth every peso",
-      content:
-        "Yes it's expensive, but for content creation and gaming, nothing else comes close. Render times are cut in half. Highly recommended for professionals.",
-      helpful: 32,
-      verified: true,
-    },
-    {
-      id: 3,
-      user: "Mike Chen",
-      avatar: "MC",
-      rating: 4,
-      date: "2024-01-05",
-      title: "Great card but huge!",
-      content:
-        "Performance is amazing but make sure your case can fit this monster. Check dimensions before buying. Other than that, perfect.",
-      helpful: 28,
-      verified: true,
-    },
-  ];
+  const reviews = data?.reviews ?? [];
+
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1)
+    : "0.0";
 
   // Related Products
   const relatedProducts = [
@@ -109,7 +75,7 @@ const ProductDetailsPage = () => {
   if (!data) return;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex mb-6 text-sm">
@@ -141,41 +107,37 @@ const ProductDetailsPage = () => {
             <div className="flex gap-6 px-6 overflow-x-auto">
               <button
                 onClick={() => setActiveTab("description")}
-                className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === "description"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "description"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 Description
               </button>
               <button
                 onClick={() => setActiveTab("specifications")}
-                className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === "specifications"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "specifications"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 Specifications
               </button>
               <button
                 onClick={() => setActiveTab("availability")}
-                className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === "availability"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "availability"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 Branch Availability
               </button>
               <button
                 onClick={() => setActiveTab("reviews")}
-                className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === "reviews"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "reviews"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 Reviews ({reviews.length})
               </button>
@@ -287,53 +249,61 @@ const ProductDetailsPage = () => {
             )} */}
 
             {/* Reviews Tab */}
-            {/* {activeTab === "reviews" && (
+            {activeTab === "reviews" && (
               <div>
-                <div className="flex items-center gap-8 mb-8 p-4 bg-gray-50 rounded-xl">
-                  <div className="text-center">
-                    <div className="text-4xl font-bold text-gray-900">
-                      {product.rating}
-                    </div>
-                    <div className="flex items-center gap-1 my-1">
-                      {renderStars(product.rating)}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Based on {product.reviewCount} reviews
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    {[5, 4, 3, 2, 1].map((star) => {
-                      const count = reviews.filter(
-                        (r) => r.rating === star,
-                      ).length;
-                      const percentage = (count / reviews.length) * 100;
-                      return (
-                        <div
-                          key={star}
-                          className="flex items-center gap-2 mb-1"
-                        >
-                          <span className="text-sm text-gray-600 w-8">
-                            {star} star
-                          </span>
-                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className="bg-yellow-400 h-full rounded-full"
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                          <span className="text-sm text-gray-500 w-8">
-                            {count}
-                          </span>
+                <div className="mb-10 flex flex-col items-center">
+                  <h3 className="text-2xl font-semibold text-slate-800 mb-8">Customer Reviews</h3>
+                  <div className="flex items-center justify-center gap-8 w-full max-w-4xl">
+                    {/* Left Column: Summary */}
+                    <div className="flex flex-col w-48">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="flex gap-0.5">
+                          {renderStars(Math.round(Number(averageRating)))}
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                        <p className="text-sm font-medium">
+                          {averageRating} out of 5
+                        </p>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Based on {reviews.length} reviews
+                      </p>
+                    </div>
 
-                <div className="mb-6 text-right">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    Write a Review
-                  </button>
+                    <div className="h-28 w-px bg-gray-200 hidden sm:block"></div>
+
+                    {/* Middle Column: Breakdown */}
+                    <div className="flex flex-col gap-1.5 w-72">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const count = reviews.filter((r) => r.rating === star).length;
+                        const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                        return (
+                          <div key={star} className="flex items-center gap-3">
+                            <div className="flex gap-0.5">
+                              {renderStars(star)}
+                            </div>
+                            <div className="flex-1 h-3.5 bg-gray-100 overflow-hidden">
+                              <div
+                                className="bg-yellow-400 h-full"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <span className="text-sm text-gray-500 w-4 text-right">
+                              {count}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="h-28 w-px bg-gray-200 hidden sm:block"></div>
+
+                    {/* Right Column: Button */}
+                    <div className="w-48 flex justify-center">
+                      <button className="px-6 py-2.5 border border-blue-600 text-blue-600 font-medium hover:bg-blue-50 transition-colors w-full">
+                        Ask a question
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-6">
@@ -375,11 +345,7 @@ const ProductDetailsPage = () => {
                       <h4 className="font-semibold text-gray-900 mb-2">
                         {review.title}
                       </h4>
-                      <p className="text-gray-600 mb-3">{review.content}</p>
-                      <button className="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-1">
-                        <ThumbsUp className="w-4 h-4" />
-                        Helpful ({review.helpful})
-                      </button>
+                      <p className="text-gray-600">{review.content}</p>
                     </div>
                   ))}
                 </div>
@@ -390,7 +356,7 @@ const ProductDetailsPage = () => {
                   </button>
                 </div>
               </div>
-            )} */}
+            )}
           </div>
         </div>
 

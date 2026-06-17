@@ -1,6 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import React from "react";
-import ProductCard from "../UI/ProductCard";
+import ProductCarousel from "./ProductCarousel";
 
 const FeaturedProducts = ({ featuredProducts }: { featuredProducts: any }) => {
   return (
@@ -19,11 +19,7 @@ const FeaturedProducts = ({ featuredProducts }: { featuredProducts: any }) => {
             View All <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <ProductCarousel products={featuredProducts} />
       </div>
     </section>
   );

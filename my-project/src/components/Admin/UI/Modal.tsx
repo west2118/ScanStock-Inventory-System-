@@ -5,7 +5,7 @@ import ReactDOM from "react-dom";
 type ModalProps = {
   isModalOpen: boolean;
   isCloseModal: () => void;
-  title?: string;
+  title?: React.ReactNode;
   children: React.ReactNode;
   width?: string;
 };

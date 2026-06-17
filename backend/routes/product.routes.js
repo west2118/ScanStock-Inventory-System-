@@ -18,6 +18,7 @@ import {
   getProductById,
   getProducts,
   updateProduct,
+  getFeaturedProducts,
 } from "../controllers/v2/products.controller.js";
 
 const router = express.Router();
@@ -41,6 +42,7 @@ router.get(
 );
 router.get("/products/new-arrivals", getNewArrivals);
 router.get("/products/best-sellers", getBestSellers);
+router.get("/products/featured", getFeaturedProducts);
 
 // router.put(
 //   "/product/:id",

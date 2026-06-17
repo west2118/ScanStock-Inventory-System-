@@ -46,7 +46,7 @@ const Sidebar = ({ sidebarOpen }: { sidebarOpen: any }) => {
         </div>
         <div>
           <h1 className="text-lg font-bold text-gray-900">ScanStock</h1>
-          <p className="text-xs text-gray-500">Inventory System</p>
+          <p className="text-xs text-gray-500">{user?.branchName || "Inventory System"}</p>
         </div>
       </div>
 
@@ -106,13 +106,13 @@ const Sidebar = ({ sidebarOpen }: { sidebarOpen: any }) => {
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
               <span className="text-white font-semibold">
-                {/* {user?.firstName} */}
+                {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
               </span>
             </div>
 
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {/* {user?.name} */}
+                {user?.firstName} {user?.lastName}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {capitalizeFirst(user?.role ?? "")} User

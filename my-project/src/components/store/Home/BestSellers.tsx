@@ -1,5 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import ProductsProductCard from "../Products/ProductsProductCard";
+import ProductCarousel from "./ProductCarousel";
 
 const BestSellers = ({ bestSellers }: { bestSellers: any }) => {
   return (
@@ -16,11 +16,7 @@ const BestSellers = ({ bestSellers }: { bestSellers: any }) => {
             View All <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-          {bestSellers.map((product) => (
-            <ProductsProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <ProductCarousel products={bestSellers} />
       </div>
     </section>
   );

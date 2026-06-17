@@ -21,6 +21,13 @@ export type OrderItemType = {
   subtotal: number;
 };
 
+export type OrderHistoryType = {
+  id: number;
+  newStatus: string;
+  remarks: string | null;
+  createdAt: string;
+};
+
 export type OrderType = {
   id: number;
   orderNumber: string;
@@ -47,4 +54,5 @@ export type OrderType = {
 
   address: OrderAddressType;
   items: OrderItemType[];
+  history: OrderHistoryType[];
 };

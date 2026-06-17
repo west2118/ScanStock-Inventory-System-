@@ -4,6 +4,7 @@ import {
   minusCartService,
   removeCartItemService,
   toggleSelectCartItemService,
+  getCartCountService,
 } from "../../services/cart.service.js";
 import { asyncHandler } from "../../utils/helper.js";
 
@@ -17,7 +18,7 @@ export const getCart = asyncHandler(async (req, res) => {
 
 export const addCart = asyncHandler(async (req, res) => {
   const customerId = req.user.id;
-  const { productId } = req.body;
+  const { productId, quantity } = req.body;
 
   if (!productId) {
     return res.status(400).json({
@@ -28,6 +29,7 @@ export const addCart = asyncHandler(async (req, res) => {
   const cartItem = await addCartService({
     customerId,
     productId,
+    quantity: quantity || 1,
   });
 
   return res.status(200).json({
@@ -55,6 +57,12 @@ export const minusCart = asyncHandler(async (req, res) => {
     message: "Cart updated",
     cartItem,
   });
+});
+
+export const getCartCount = asyncHandler(async (req, res) => {
+  const customerId = req.user.id;
+  const count = await getCartCountService(customerId);
+  return res.status(200).json(count);
 });
 
 export const removeCartItem = asyncHandler(async (req, res) => {

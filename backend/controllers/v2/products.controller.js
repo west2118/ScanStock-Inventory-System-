@@ -9,6 +9,7 @@ import {
   getProductByIdService,
   getProductsService,
   updateProductService,
+  getFeaturedProductsService,
 } from "../../services/product.service.js";
 
 // CREATE PRODUCT
@@ -132,6 +133,15 @@ export const getNewArrivals = asyncHandler(async (req, res) => {
 
 export const getBestSellers = asyncHandler(async (req, res) => {
   const products = await getBestSellersService();
+
+  return res.status(200).json({
+    success: true,
+    products,
+  });
+});
+
+export const getFeaturedProducts = asyncHandler(async (req, res) => {
+  const products = await getFeaturedProductsService();
 
   return res.status(200).json({
     success: true,

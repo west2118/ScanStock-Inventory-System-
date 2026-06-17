@@ -10,7 +10,7 @@ const Footer = () => {
               <div className="bg-linear-to-r from-blue-600 to-purple-600 p-2 rounded-xl">
                 <Cpu className="w-8 h-8 text-white" />
               </div>
-              <span className="text-xl font-bold">EasyPC</span>
+              <span className="text-xl font-bold">ByteForge</span>
             </div>
             <p className="text-white text-sm">
               Your one-stop shop for premium computer parts and gaming gear in
@@ -82,13 +82,13 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>support@easypc.com</span>
+                <span>support@byteforge.com</span>
               </li>
             </ul>
           </div>
         </div>
         <div className="border-t border-gray-200 pt-8 text-center text-white text-sm">
-          <p>&copy; 2024 EasyPC. All rights reserved.</p>
+          <p>&copy; 2024 ByteForge. All rights reserved.</p>
         </div>
       </div>
     </footer>

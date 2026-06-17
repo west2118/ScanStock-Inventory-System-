@@ -93,7 +93,7 @@ const RegisterPage = () => {
                 <Cpu className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Join the <span className="text-gray-900">EasyPC</span> Community
+                Join the <span className="text-gray-900">ByteForge</span> Community
               </h1>
               <p className="text-gray-500 text-lg leading-relaxed">
                 Create an account to enjoy exclusive benefits, track your
@@ -124,7 +124,7 @@ const RegisterPage = () => {
             </div>
             <div className="mt-8 pt-8 border-t border-gray-200">
               <p className="text-sm text-gray-400">
-                © 2024 EasyPC. All rights reserved.
+                © 2024 ByteForge. All rights reserved.
               </p>
             </div>
           </div>
@@ -141,7 +141,7 @@ const RegisterPage = () => {
                   Create Account
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Join the EasyPC community
+                  Join the ByteForge community
                 </p>
               </div>
 

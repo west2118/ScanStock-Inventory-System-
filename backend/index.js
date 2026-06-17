@@ -21,26 +21,27 @@ import stockAdjustmentRoutes from "./routes/stock.adjustment.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import checkoutRoutes from "./routes/checkout.routes.js";
 import orderRoutes from "./routes/order.routes.js";
+import wishlistRoutes from "./routes/wishlist.routes.js";
 
-import createProductTable from "./data/createProductTable.js";
+import createProductTables from "./data/createProductTables.js";
 import createStockMovementTable from "./data/createStockMovement.js";
 import createBranchTable from "./data/createBranchTable.js";
 import createBranchInventoryTable from "./data/createBranchInventoryTable.js";
-import createTransactionTable from "./data/createTransactionTable.js";
-import createTransactionItemTable from "./data/createTransactionItemTable.js";
 import createUserTable from "./data/createUserTable.js";
 import createRefreshTokenTable from "./data/createRefreshTokenTable.js";
 import createBrandTable from "./data/createBrandTable.js";
 import createCategoryTable from "./data/createCategory.js";
-import createProductImagesTable from "./data/createProductImages.js";
-import createProductSpecificationsTable from "./data/createProductSpecification.js";
+
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { apiLimiter } from "./utils/apiLimiter.js";
-import createStockAdjustmentTable from "./data/createStockAdjustmentTable.js";
-import createStockAdjustmentItemTable from "./data/createStockAdjustmentItemTable.js";
+import createTransactionTables from "./data/createTransactionTables.js";
+import createStockAdjustmentTables from "./data/createStockAdjustmentTables.js";
+import createStockTransferTables from "./data/createStockTransferTables.js";
+import createPurchaseOrderTables from "./data/createPurchaseOrderTables.js";
 import createCartTables from "./data/createCartTables.js";
 import createCheckoutSessionTables from "./data/createCheckoutSessionTables.js";
 import createOrderTables from "./data/createOrderTables.js";
+import createWishlistTables from "./data/createWishlistTables.js";
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -80,28 +81,28 @@ app.use("/api", dashboardRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", checkoutRoutes);
 app.use("/api", orderRoutes);
+app.use("/api", wishlistRoutes);
 
 app.use(errorHandler);
 
 // Create table before starting server
 // createBranchInventoryTable();
-// createProductTable();
+// createProductTables();
 // createBranchTable();
 // createUserTable();
 // createRefreshTokenTable();
 // createStockMovementTable();
-// createTransactionTable();
-// createTransactionItemTable();
+// createTransactionTables();
 // createBrandTable();
 // createCategoryTable();
-// createProductImagesTable();
-// createProductSpecificationsTable();
-// createStockAdjustmentTable();
-// createStockAdjustmentItemTable();
+// createStockAdjustmentTables();
+// createStockTransferTables();
+// createPurchaseOrderTables();
 // createStockMovementTable();
 // createCartTables();
 // createCheckoutSessionTables();
 createOrderTables();
+createWishlistTables();
 
 // Testing postgres
 app.get("/", async (req, res) => {

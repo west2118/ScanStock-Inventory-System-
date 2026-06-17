@@ -4,7 +4,7 @@ import Footer from "./Footer";
 
 const StoreLayout = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
       <Outlet />

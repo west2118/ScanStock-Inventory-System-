@@ -13,6 +13,7 @@ import {
   Banknote,
   CreditCard,
   Wallet,
+  Package2Icon,
 } from "lucide-react";
 
 // Navigation items
@@ -35,6 +36,12 @@ export const navigation = [
   //   roles: ["admin", "branch_manager", "staff"],
   //   icon: Receipt,
   // },
+  {
+    id: "orders",
+    name: "Orders",
+    roles: ["admin", "branch_manager", "staff"],
+    icon: Package2Icon,
+  },
   {
     id: "products",
     name: "Products",

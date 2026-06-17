@@ -25,6 +25,7 @@ export const getCartService = async (customerId) => {
         p.product_name AS "productName",
         p.sku,
         p.price,
+        COALESCE(bi.stock, 0) AS stock,
         ci.is_selected AS "isSelected",
 
         b.name AS "brandName",
@@ -40,6 +41,12 @@ export const getCartService = async (customerId) => {
 
     JOIN products p
         ON p.id = ci.product_id
+
+    LEFT JOIN branches br 
+        ON br.branch_name = 'Central Warehouse'
+
+    LEFT JOIN branch_inventory bi 
+        ON bi.product_id = p.id AND bi.branch_id = br.id
 
     LEFT JOIN brands b
         ON b.id = p.brand_id
@@ -58,7 +65,7 @@ export const getCartService = async (customerId) => {
   return itemsResult.rows;
 };
 
-export const addCartService = async ({ customerId, productId }) => {
+export const addCartService = async ({ customerId, productId, quantity = 1 }) => {
   const client = await pool.connect();
 
   try {
@@ -93,14 +100,14 @@ export const addCartService = async ({ customerId, productId }) => {
     const itemResult = await client.query(
       `
       INSERT INTO cart_items (cart_id, product_id, quantity)
-      VALUES ($1, $2, 1)
+      VALUES ($1, $2, $3)
       ON CONFLICT (cart_id, product_id)
       DO UPDATE SET
-        quantity = cart_items.quantity + 1,
+        quantity = cart_items.quantity + $3,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *
       `,
-      [cartId, productId],
+      [cartId, productId, quantity],
     );
 
     await client.query(
@@ -111,6 +118,24 @@ export const addCartService = async ({ customerId, productId }) => {
       `,
       [cartId],
     );
+
+    // Automatically remove from wishlist if present
+    const wishlistResult = await client.query(
+      `
+      SELECT id FROM wishlists WHERE user_id = $1
+      `,
+      [customerId]
+    );
+
+    if (wishlistResult.rows.length > 0) {
+      await client.query(
+        `
+        DELETE FROM wishlist_items 
+        WHERE wishlist_id = $1 AND product_id = $2
+        `,
+        [wishlistResult.rows[0].id, productId]
+      );
+    }
 
     await client.query("COMMIT");
 
@@ -256,4 +281,18 @@ export const toggleSelectCartItemService = async ({
   }
 
   return result.rows[0];
+};
+
+export const getCartCountService = async (customerId) => {
+  const cartResult = await pool.query(
+    "SELECT id FROM carts WHERE customer_id = $1",
+    [customerId]
+  );
+  if (cartResult.rows.length === 0) return { count: 0 };
+  
+  const countResult = await pool.query(
+    "SELECT COUNT(*) FROM cart_items WHERE cart_id = $1",
+    [cartResult.rows[0].id]
+  );
+  return { count: parseInt(countResult.rows[0].count) };
 };

@@ -1,6 +1,59 @@
-import React from "react";
+import {
+  Package,
+  Truck,
+  Clock,
+  XCircle,
+  RotateCcw,
+  RefreshCw,
+  CheckCircle,
+} from "lucide-react";
 
-const OrdersTab = ({ tabs, activeTab, setActiveTab }: any) => {
+const OrdersTab = ({ activeTab, setActiveTab, stats }: any) => {
+  const tabs = [
+    {
+      id: "all",
+      label: "All Orders",
+      icon: Package,
+      count: stats?.total || 0,
+    },
+    {
+      id: "pending",
+      label: "Pending",
+      icon: Clock,
+      count: stats?.pending || 0,
+    },
+    {
+      id: "processing",
+      label: "Processing",
+      icon: RefreshCw,
+      count: stats?.processing || 0,
+    },
+    {
+      id: "shipped",
+      label: "Shipped",
+      icon: Truck,
+      count: stats?.shipped || 0,
+    },
+    {
+      id: "delivered",
+      label: "Delivered",
+      icon: CheckCircle,
+      count: stats?.delivered || 0,
+    },
+    {
+      id: "returned",
+      label: "Returned",
+      icon: RotateCcw,
+      count: stats?.returned || 0,
+    },
+    {
+      id: "cancelled",
+      label: "Cancelled",
+      icon: XCircle,
+      count: stats?.cancelled || 0,
+    },
+  ];
+
   return (
     <div className="border-b border-gray-200 mb-6 overflow-x-auto">
       <div className="flex gap-1 min-w-max">

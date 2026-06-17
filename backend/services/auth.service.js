@@ -213,14 +213,16 @@ export const meService = async (userId) => {
   const { rows } = await pool.query(
     `
     SELECT 
-      id,
-      role,
-      first_name AS "firstName",
-      last_name AS "lastName",
-      email,
-      branch_id AS "branchId"
-    FROM users
-    WHERE id = $1
+      u.id,
+      u.role,
+      u.first_name AS "firstName",
+      u.last_name AS "lastName",
+      u.email,
+      u.branch_id AS "branchId",
+      b.branch_name AS "branchName"
+    FROM users u
+    LEFT JOIN branches b ON b.id = u.branch_id
+    WHERE u.id = $1
     `,
     [userId],
   );

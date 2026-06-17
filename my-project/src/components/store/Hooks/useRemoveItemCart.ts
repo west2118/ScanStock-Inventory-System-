@@ -28,6 +28,9 @@ export const useRemoveCart = () => {
       queryClient.invalidateQueries({
         queryKey: ["cart-data"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["cart-count"],
+      });
     },
 
     onError: (error) => {

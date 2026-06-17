@@ -26,10 +26,10 @@ const LoginPage = () => {
     try {
       const user = await login(formData);
 
-      if (user.role === "admin") {
-        navigate("/admin");
+      if (user.role === "customer") {
+        navigate("/");
       } else {
-        navigate("/staff/scan");
+        navigate(`/${user.role}`);
       }
 
       toast.success("Login successfully!");
@@ -51,7 +51,7 @@ const LoginPage = () => {
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
                 Welcome Back to{" "}
                 <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  EasyPC
+                  ByteForge
                 </span>
               </h1>
               <p className="text-gray-500 text-lg leading-relaxed">
@@ -81,7 +81,7 @@ const LoginPage = () => {
 
             <div className="mt-8 pt-8 border-t border-gray-200">
               <p className="text-sm text-gray-400">
-                © 2024 EasyPC. All rights reserved.
+                © 2024 ByteForge. All rights reserved.
               </p>
             </div>
           </div>

@@ -13,13 +13,62 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { ProductDetailsType } from "../../../utils/types";
-import { pesoFormatter } from "../../../utils/utils";
+import { pesoFormatter, fetchData, fetchWithAuth } from "../../../utils/utils";
 import { useAddCart } from "../Hooks/useAddCart";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../../context/AuthContext";
+import { toast } from "react-toastify";
 
 const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
   const [quantity, setQuantity] = useState(1);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const addCartMutation = useAddCart();
+
+  const reviews = product.reviews ?? [];
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((acc: number, curr: any) => acc + curr.rating, 0) / reviews.length).toFixed(1)
+    : "0.0";
+
+  const { data: wishlistItems = [] } = useQuery({
+    queryKey: ["wishlist"],
+    queryFn: fetchData("http://localhost:5001/api/wishlist"),
+    enabled: !!user,
+  });
+
+  const isFavorited = wishlistItems.some((item: any) => item.id === product.id);
+
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) return; // Could optionally show login modal here
+      if (isFavorited) {
+        const res = await fetchWithAuth(`http://localhost:5001/api/wishlist/${product.id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error("Failed to remove");
+      } else {
+        const res = await fetchWithAuth(`http://localhost:5001/api/wishlist`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: product.id }),
+        });
+        if (!res.ok) throw new Error("Failed to add");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      queryClient.invalidateQueries({ queryKey: ["wishlist-count"] });
+      if (isFavorited) {
+        toast.success("Removed from wishlist!");
+      } else {
+        toast.success("Added to wishlist successfully!");
+      }
+    },
+    onError: () => {
+      toast.error("Failed to update wishlist");
+    }
+  });
 
   const incrementQuantity = () => {
     if (quantity < product.stock) {
@@ -57,14 +106,14 @@ const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
       </h1>
 
       {/* Rating */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-2 mb-4">
         <div className="flex items-center gap-1">
-          {renderStars(product.rating)}
+          {renderStars(Math.round(Number(averageRating)))}
         </div>
         <span className="text-sm font-medium text-gray-900">
-          {product.rating}
+          {averageRating}
         </span>
-        <span className="text-sm text-gray-500">(5 reviews)</span>
+        <span className="text-sm text-gray-500">({reviews.length} reviews)</span>
       </div>
 
       {/* Price */}
@@ -118,15 +167,32 @@ const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
         </button>
 
         <button
-          onClick={() => addCartMutation.mutate(product.id)}
+          onClick={() => addCartMutation.mutate(
+            { productId: product.id, quantity },
+            { onSuccess: () => {
+                setQuantity(1);
+                toast.success("Added to cart successfully!");
+              }
+            }
+          )}
           disabled={addCartMutation.isPending}
-          className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors flex items-center justify-center gap-2"
         >
           <ShoppingCart className="w-5 h-5" />
         </button>
 
-        <button className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center">
-          <Heart className="w-5 h-5" />
+        <button
+          onClick={() => {
+            if (user) {
+              toggleFavoriteMutation.mutate();
+            } else {
+              // Optionally handle unauthenticated state (e.g. redirect to login)
+            }
+          }}
+          disabled={toggleFavoriteMutation.isPending}
+          className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center group"
+        >
+          <Heart className={`w-5 h-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-black group-hover:text-red-500"}`} />
         </button>
 
         <button className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center">

@@ -148,9 +148,15 @@ const CheckoutPage = () => {
       queryClient.invalidateQueries({
         queryKey: ["cart-data"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["cart-count"],
+      });
 
       queryClient.invalidateQueries({
         queryKey: ["orders"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["orders-count"],
       });
 
       toast.success("Order placed successfully");
@@ -170,7 +176,7 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Step Indicators */}
         <CheckoutSteps currentStep={currentStep} />

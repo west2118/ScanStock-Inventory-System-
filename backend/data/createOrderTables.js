@@ -27,6 +27,9 @@ const createOrderTables = async () => {
       payment_status VARCHAR(50) NOT NULL DEFAULT 'pending',
       order_status VARCHAR(50) NOT NULL DEFAULT 'pending',
 
+      tracking_number VARCHAR(255),
+      courier_name VARCHAR(100),
+
       notes TEXT,
 
       fulfilled_by INT

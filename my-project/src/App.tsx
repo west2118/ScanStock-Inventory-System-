@@ -28,6 +28,7 @@ import StoreLayout from "./components/store/StoreLayout";
 import StockAdjustments from "./page/admin/StockAdjustments";
 import OrdersPage from "./page/store/Orders";
 import AdminOrdersPage from "./page/admin/Orders";
+import GuestRoute from "./components/store/GuestRoute";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -41,14 +42,14 @@ const router = createBrowserRouter(
         <Route path="cart" element={<CartPage />} />
         <Route path="checkout/:id" element={<CheckoutPage />} />
         <Route path="my-orders" element={<OrdersPage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
+        <Route path="login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
       </Route>
 
       <Route
         path="/:role"
         element={
-          <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff"]}>
+          <ProtectedRoute allowedRoles={["admin", "branch_manager", "staff", "central_admin", "cashier", "inventory_staff"]}>
             <DashboardLayout />
           </ProtectedRoute>
         }
@@ -56,7 +57,7 @@ const router = createBrowserRouter(
         <Route
           index
           element={
-            <ProtectedRoute allowedRoles={["admin", "branch_manager"]}>
+            <ProtectedRoute allowedRoles={["admin", "branch_manager", "central_admin", "cashier", "inventory_staff"]}>
               <Dashboard />
             </ProtectedRoute>
           }

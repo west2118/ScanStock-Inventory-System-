@@ -488,10 +488,33 @@ export const getProductByIdService = async (productSlug) => {
     [product.id],
   );
 
+  const reviewsResult = await pool.query(
+    `
+    SELECT
+      pr.id,
+      pr.rating,
+      pr.title,
+      pr.review AS content,
+      pr.created_at AS date,
+      CONCAT(u.first_name, ' ', u.last_name) AS user,
+      CONCAT(SUBSTRING(u.first_name, 1, 1), SUBSTRING(u.last_name, 1, 1)) AS avatar,
+      true AS verified
+    FROM product_reviews pr
+    LEFT JOIN users u ON u.id = pr.customer_id
+    WHERE pr.product_id = $1
+    ORDER BY pr.created_at DESC
+    `,
+    [product.id],
+  );
+
   return {
     ...product,
     specifications: specificationsResult.rows,
     images: imagesResult.rows,
+    reviews: reviewsResult.rows.map(r => ({
+      ...r,
+      date: new Date(r.date).toISOString().split('T')[0]
+    })),
   };
 };
 
@@ -737,7 +760,7 @@ export const getNewArrivalsService = async () => {
 
     ORDER BY p.created_at DESC
 
-    LIMIT 8
+    LIMIT 15
   `);
 
   return result.rows;
@@ -800,7 +823,7 @@ export const getBestSellersService = async () => {
     ORDER BY "totalSold" DESC,
              p.created_at DESC
 
-    LIMIT 8
+    LIMIT 15
   `);
 
   return result.rows;
@@ -925,4 +948,110 @@ export const findProductByIdService = async (id) => {
   const { rows } = await pool.query(query, [id]);
 
   return rows[0];
+};
+
+export const getFeaturedProductsService = async () => {
+  const featured = [];
+  const selectedIds = [];
+
+  const addProduct = (row, badge, badgeColor) => {
+    if (row && !selectedIds.includes(row.id) && featured.length < 15) {
+      featured.push({ ...row, badge, badgeColor });
+      selectedIds.push(row.id);
+    }
+  };
+
+  // 1. Best Seller
+  const bestSeller = await pool.query(`
+    SELECT
+      p.id, p.slug, p.product_name AS "productName", p.price,
+      c.name AS "categoryName", b.name AS "brandName",
+      COALESCE(bi.stock, 0) AS stock,
+      ARRAY(SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.is_primary DESC, pi.sort_order ASC LIMIT 1) AS images,
+      COALESCE(SUM(oi.quantity), 0)::INTEGER AS "totalSold"
+    FROM products p
+    LEFT JOIN order_items oi ON oi.product_id = p.id
+    LEFT JOIN categories c ON c.id = p.category_id
+    LEFT JOIN brands b ON b.id = p.brand_id
+    LEFT JOIN branches br ON br.branch_name = 'Central Warehouse'
+    LEFT JOIN branch_inventory bi ON bi.product_id = p.id AND bi.branch_id = br.id
+    WHERE p.status = 'active'
+    GROUP BY p.id, c.name, b.name, bi.stock
+    ORDER BY "totalSold" DESC, p.created_at DESC
+    LIMIT 15
+  `);
+  if (bestSeller.rows.length > 0) {
+    bestSeller.rows.forEach(r => addProduct(r, "Best Seller", "bg-yellow-500"));
+  }
+
+  let excludedIds = selectedIds.length > 0 ? selectedIds.join(',') : '0';
+
+  // 2. Newest
+  const newestProduct = await pool.query(`
+    SELECT
+      p.id, p.slug, p.product_name AS "productName", p.price,
+      c.name AS "categoryName", b.name AS "brandName",
+      COALESCE(bi.stock, 0) AS stock,
+      ARRAY(SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.is_primary DESC, pi.sort_order ASC LIMIT 1) AS images
+    FROM products p
+    LEFT JOIN categories c ON c.id = p.category_id
+    LEFT JOIN brands b ON b.id = p.brand_id
+    LEFT JOIN branches br ON br.branch_name = 'Central Warehouse'
+    LEFT JOIN branch_inventory bi ON bi.product_id = p.id AND bi.branch_id = br.id
+    WHERE p.status = 'active' AND p.id NOT IN (${excludedIds})
+    ORDER BY p.created_at DESC
+    LIMIT 15
+  `);
+  if (newestProduct.rows.length > 0) {
+    newestProduct.rows.forEach(r => addProduct(r, "New", "bg-green-500"));
+  }
+
+  excludedIds = selectedIds.length > 0 ? selectedIds.join(',') : '0';
+
+  // 3. Highest Rated
+  const highestRated = await pool.query(`
+    SELECT
+      p.id, p.slug, p.product_name AS "productName", p.price,
+      c.name AS "categoryName", b.name AS "brandName",
+      COALESCE(bi.stock, 0) AS stock,
+      ARRAY(SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.is_primary DESC, pi.sort_order ASC LIMIT 1) AS images,
+      COALESCE(AVG(pr.rating), 0)::FLOAT AS "averageRating"
+    FROM products p
+    LEFT JOIN product_reviews pr ON pr.product_id = p.id
+    LEFT JOIN categories c ON c.id = p.category_id
+    LEFT JOIN brands b ON b.id = p.brand_id
+    LEFT JOIN branches br ON br.branch_name = 'Central Warehouse'
+    LEFT JOIN branch_inventory bi ON bi.product_id = p.id AND bi.branch_id = br.id
+    WHERE p.status = 'active' AND p.id NOT IN (${excludedIds})
+    GROUP BY p.id, c.name, b.name, bi.stock
+    ORDER BY "averageRating" DESC, p.created_at DESC
+    LIMIT 15
+  `);
+  if (highestRated.rows.length > 0) {
+    highestRated.rows.forEach(r => addProduct(r, "Top Rated", "bg-blue-500"));
+  }
+
+  excludedIds = selectedIds.length > 0 ? selectedIds.join(',') : '0';
+
+  // 4. Highest Stock
+  const highestStock = await pool.query(`
+    SELECT
+      p.id, p.slug, p.product_name AS "productName", p.price,
+      c.name AS "categoryName", b.name AS "brandName",
+      COALESCE(bi.stock, 0) AS stock,
+      ARRAY(SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.is_primary DESC, pi.sort_order ASC LIMIT 1) AS images
+    FROM products p
+    LEFT JOIN categories c ON c.id = p.category_id
+    LEFT JOIN brands b ON b.id = p.brand_id
+    LEFT JOIN branches br ON br.branch_name = 'Central Warehouse'
+    LEFT JOIN branch_inventory bi ON bi.product_id = p.id AND bi.branch_id = br.id
+    WHERE p.status = 'active' AND p.id NOT IN (${excludedIds})
+    ORDER BY stock DESC, p.created_at DESC
+    LIMIT 15
+  `);
+  if (highestStock.rows.length > 0) {
+    highestStock.rows.forEach(r => addProduct(r, "High Stock", "bg-purple-500"));
+  }
+
+  return featured;
 };

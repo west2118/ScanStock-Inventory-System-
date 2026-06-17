@@ -45,26 +45,31 @@ const CartItemCard = ({ item }: { item: CartItem }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_130px_140px] gap-6 items-end w-full">
+        <div className="grid grid-cols-[minmax(0,1fr)_130px_140px] gap-6 w-full h-24">
           {/* Product Info */}
-          <div className="min-w-0">
-            <p className="text-xs text-gray-400">{item.brandName}</p>
+          <div className="min-w-0 flex flex-col justify-between py-1">
+            <div>
+              <p className="text-xs text-gray-400">{item.brandName}</p>
 
-            <h3 className="font-medium text-gray-900 truncate">
-              {item.productName}
-            </h3>
+              <h3 className="font-medium text-gray-900 truncate">
+                {item.productName}
+              </h3>
 
-            <p className="text-xs text-gray-400 mt-1 truncate">
-              SKU: {item.sku}
-            </p>
+              <p className="font-semibold text-gray-900">
+                {pesoFormatter.format(Number(item.price))}
+              </p>
+            </div>
 
-            <p className="mt-2 font-semibold text-gray-900">
-              {pesoFormatter.format(Number(item.price))}
-            </p>
+            <div>
+
+              <p className="text-xs text-gray-500 mt-0.5">
+                {item.stock} units available
+              </p>
+            </div>
           </div>
 
           {/* Quantity */}
-          <div className="flex justify-center">
+          <div className="flex justify-center self-end py-1">
             <div className="flex items-center border border-gray-200 rounded-lg">
               <button
                 onClick={() => minusCartMutation.mutate(item.productId)}
@@ -76,7 +81,7 @@ const CartItemCard = ({ item }: { item: CartItem }) => {
               <span className="w-10 text-center text-sm">{item.quantity}</span>
 
               <button
-                onClick={() => addCartMutation.mutate(item.productId)}
+                onClick={() => addCartMutation.mutate({ productId: item.productId })}
                 className="w-8 h-8 flex items-center justify-center hover:bg-gray-50"
               >
                 <Plus className="w-4 h-4" />
@@ -85,7 +90,7 @@ const CartItemCard = ({ item }: { item: CartItem }) => {
           </div>
 
           {/* Subtotal */}
-          <div className="text-right w-35">
+          <div className="text-right w-35 self-end py-1">
             <p className="text-lg font-semibold text-gray-900">
               {pesoFormatter.format(subtotal)}
             </p>

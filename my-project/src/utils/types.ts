@@ -1,10 +1,13 @@
 export type UserType = {
   id: number;
+  firstName: string;
+  lastName: string;
   name: string;
   username: string;
   role: string;
   status: string;
   branchId: number;
+  branchName: string;
   createdAt: string;
 };
 
@@ -262,6 +265,7 @@ export type CartItem = {
   sku: string;
   imageUrl: string;
   price: string;
+  stock: number;
   quantity: number;
   isSelected: boolean;
   createdAt: string;

@@ -11,7 +11,7 @@ const ProductCard = ({
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 group">
       <div className="relative">
         <img
-          src={product.imageUrl}
+          src={product.images?.[0] || product.imageUrl || product.image}
           alt={product.name}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
