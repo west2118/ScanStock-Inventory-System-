@@ -38,11 +38,21 @@ const ProductTableRow = ({
       <td className="py-3 px-4 text-right font-semibold text-gray-900">
         {pesoFormatter.format(product.price)}
       </td>
-      <td className="py-3 px-4 text-right text-gray-600">
-        {product.unitsSold.toLocaleString()}
+      <td className="py-3 px-4 text-right">
+        <div className="flex flex-col items-end">
+          <span className="font-semibold text-gray-900">{product.unitsSold.toLocaleString()}</span>
+          <span className="text-xs text-gray-400">
+            {product.storeUnitsSold.toLocaleString()} store • {product.onlineUnitsSold.toLocaleString()} online
+          </span>
+        </div>
       </td>
-      <td className="py-3 px-4 text-right font-semibold text-gray-900">
-        {formatPesoShort(product.totalRevenue)}
+      <td className="py-3 px-4 text-right">
+        <div className="flex flex-col items-end">
+          <span className="font-semibold text-gray-900">{formatPesoShort(product.totalRevenue)}</span>
+          <span className="text-xs text-gray-400">
+            {formatPesoShort(product.storeRevenue)} store • {formatPesoShort(product.onlineRevenue)} online
+          </span>
+        </div>
       </td>
       <td className="py-3 px-4 text-center">
         <div className="flex items-center justify-center gap-2">

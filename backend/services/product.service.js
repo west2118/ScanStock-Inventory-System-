@@ -401,6 +401,192 @@ export const getProductsService = async ({
   };
 };
 
+export const getAdminProductsService = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+  status,
+  categoryId,
+  brandId,
+}) => {
+  const offset = (page - 1) * limit;
+
+  const values = [];
+  const conditions = [];
+
+  let paramCount = 1;
+
+  if (search) {
+    conditions.push(`
+      (
+        p.product_name ILIKE $${paramCount}
+        OR p.sku ILIKE $${paramCount}
+      )
+    `);
+    values.push(`%${search}%`);
+    paramCount++;
+  }
+
+  if (status) {
+    conditions.push(`p.status = $${paramCount}`);
+    values.push(status);
+    paramCount++;
+  } else {
+    conditions.push(`p.status != 'archived'`);
+  }
+
+  if (categoryId) {
+    conditions.push(`p.category_id = $${paramCount}`);
+    values.push(categoryId);
+    paramCount++;
+  }
+
+  if (brandId) {
+    conditions.push(`p.brand_id = $${paramCount}`);
+    values.push(brandId);
+    paramCount++;
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const countQuery = `
+    SELECT COUNT(*)::INTEGER AS total
+    FROM products p
+    ${whereClause}
+  `;
+
+  const countResult = await pool.query(countQuery, values);
+  const total = countResult.rows[0].total;
+
+  values.push(limit);
+  values.push(offset);
+
+  const productsQuery = `
+    SELECT
+      p.id,
+      p.sku,
+      p.barcode,
+      p.product_name AS "productName",
+      p.price,
+      c.name AS "category",
+      b.name AS "brand",
+      
+      COALESCE((
+        SELECT SUM(ti.quantity)
+        FROM transaction_items ti
+        JOIN transactions t ON t.id = ti.transaction_id AND t.status != 'voided'
+        WHERE ti.product_id = p.id
+      ), 0)::INTEGER AS "storeUnitsSold",
+
+      COALESCE((
+        SELECT SUM(oi.quantity)
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id AND o.order_status IN ('delivered', 'completed')
+        WHERE oi.product_id = p.id
+      ), 0)::INTEGER AS "onlineUnitsSold",
+      
+      COALESCE((
+        SELECT SUM(ti.subtotal)
+        FROM transaction_items ti
+        JOIN transactions t ON t.id = ti.transaction_id AND t.status != 'voided'
+        WHERE ti.product_id = p.id
+      ), 0)::NUMERIC AS "storeRevenue",
+
+      COALESCE((
+        SELECT SUM(oi.subtotal)
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id AND o.order_status IN ('delivered', 'completed')
+        WHERE oi.product_id = p.id
+      ), 0)::NUMERIC AS "onlineRevenue"
+
+    FROM products p
+    LEFT JOIN categories c ON c.id = p.category_id
+    LEFT JOIN brands b ON b.id = p.brand_id
+    ${whereClause}
+    ORDER BY p.id DESC
+    LIMIT $${paramCount} OFFSET $${paramCount + 1}
+  `;
+
+  try {
+    const productsResult = await pool.query(productsQuery, values);
+
+    const formattedProducts = productsResult.rows.map((p) => ({
+      ...p,
+      unitsSold: Number(p.storeUnitsSold) + Number(p.onlineUnitsSold),
+      totalRevenue: Number(p.storeRevenue) + Number(p.onlineRevenue),
+    }));
+
+    return {
+      products: formattedProducts,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching admin products:", error);
+    throw new Error("Failed to fetch admin products");
+  }
+};
+
+export const getAdminProductStatsService = async () => {
+  const query = `
+    WITH product_sales AS (
+      SELECT 
+        p.id, 
+        p.product_name,
+        
+        COALESCE((
+          SELECT SUM(ti.quantity)
+          FROM transaction_items ti
+          JOIN transactions t ON t.id = ti.transaction_id AND t.status != 'voided'
+          WHERE ti.product_id = p.id
+        ), 0) AS store_sold,
+        
+        COALESCE((
+          SELECT SUM(oi.quantity)
+          FROM order_items oi
+          JOIN orders o ON o.id = oi.order_id AND o.order_status IN ('delivered', 'completed')
+          WHERE oi.product_id = p.id
+        ), 0) AS online_sold,
+        
+        COALESCE((
+          SELECT SUM(ti.subtotal)
+          FROM transaction_items ti
+          JOIN transactions t ON t.id = ti.transaction_id AND t.status != 'voided'
+          WHERE ti.product_id = p.id
+        ), 0) AS store_revenue,
+        
+        COALESCE((
+          SELECT SUM(oi.subtotal)
+          FROM order_items oi
+          JOIN orders o ON o.id = oi.order_id AND o.order_status IN ('delivered', 'completed')
+          WHERE oi.product_id = p.id
+        ), 0) AS online_revenue
+        
+      FROM products p
+      WHERE p.status != 'archived'
+    )
+    SELECT 
+      COUNT(id)::INTEGER AS "totalProducts",
+      COALESCE(SUM(store_revenue + online_revenue), 0)::NUMERIC AS "totalRevenue",
+      (SELECT product_name FROM product_sales ORDER BY (store_sold + online_sold) DESC, id ASC LIMIT 1) AS "bestSellingProduct",
+      (SELECT product_name FROM product_sales ORDER BY (store_sold + online_sold) ASC, id ASC LIMIT 1) AS "lowestSellingProduct"
+    FROM product_sales;
+  `;
+
+  try {
+    const result = await pool.query(query);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching admin product stats:", error);
+    throw new Error("Failed to fetch admin product stats");
+  }
+};
+
 // GET PRODUCT BY ID
 export const getProductByIdService = async (productSlug) => {
   const productResult = await pool.query(
@@ -607,14 +793,16 @@ export const getCollectionsService = async ({
   }
 
   if (categoryId) {
-    conditions.push(`p.category_id = $${paramCount}`);
-    values.push(categoryId);
+    const categoryIds = categoryId.toString().split(',').map(Number);
+    conditions.push(`p.category_id = ANY($${paramCount}::int[])`);
+    values.push(categoryIds);
     paramCount++;
   }
 
   if (brandId) {
-    conditions.push(`p.brand_id = $${paramCount}`);
-    values.push(brandId);
+    const brandIds = brandId.toString().split(',').map(Number);
+    conditions.push(`p.brand_id = ANY($${paramCount}::int[])`);
+    values.push(brandIds);
     paramCount++;
   }
 

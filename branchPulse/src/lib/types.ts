@@ -248,5 +248,9 @@ export type ProductType = {
   createdAt: string;
   brand: string;
   unitsSold: number;
+  storeUnitsSold: number;
+  onlineUnitsSold: number;
   totalRevenue: number;
+  storeRevenue: number;
+  onlineRevenue: number;
 };

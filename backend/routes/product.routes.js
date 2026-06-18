@@ -16,7 +16,9 @@ import {
   getCollections,
   getNewArrivals,
   getProductById,
-  getProducts,
+  getStoreProducts,
+  getAdminProducts,
+  getAdminProductStats,
   updateProduct,
   getFeaturedProducts,
 } from "../controllers/v2/products.controller.js";
@@ -31,7 +33,9 @@ router.put(
   updateProduct,
 );
 router.put("/products/:id/delete", verifyToken, deleteProduct);
-router.get("/products", verifyToken, getProducts);
+router.get("/products", verifyToken, getStoreProducts);
+router.get("/admin/products", verifyToken, getAdminProducts);
+router.get("/admin/products-stats", verifyToken, getAdminProductStats);
 router.get("/collections", getCollections);
 router.get("/collections/:id", getProductById);
 router.get(

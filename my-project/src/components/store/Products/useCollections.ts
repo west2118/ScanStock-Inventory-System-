@@ -21,7 +21,8 @@ export const useCollections = () => {
     limit: 10,
     search: "",
     status: "",
-    category: "",
+    categoryId: "",
+    brandId: "",
   });
 
   const filters = useMemo(
@@ -30,7 +31,8 @@ export const useCollections = () => {
       limit: params.limit || 10,
       search: params.search || "",
       status: params.status || "",
-      category: params.category || "",
+      categoryId: params.categoryId || "",
+      brandId: params.brandId || "",
     }),
     [params],
   );

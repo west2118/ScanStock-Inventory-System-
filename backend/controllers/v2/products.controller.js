@@ -8,6 +8,8 @@ import {
   getNewArrivalsService,
   getProductByIdService,
   getProductsService,
+  getAdminProductsService,
+  getAdminProductStatsService,
   updateProductService,
   getFeaturedProductsService,
 } from "../../services/product.service.js";
@@ -56,8 +58,8 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   });
 });
 
-// GET PRODUCTS
-export const getProducts = asyncHandler(async (req, res) => {
+// GET STORE PRODUCTS
+export const getStoreProducts = asyncHandler(async (req, res) => {
   const products = await getProductsService({
     page: Number(req.query.page) || 1,
     limit: Number(req.query.limit) || 10,
@@ -66,7 +68,7 @@ export const getProducts = asyncHandler(async (req, res) => {
     brandId: req.query.brandId ? Number(req.query.brandId) : undefined,
     status: req.query.status,
 
-    branchId: req.user.branchId,
+    branchId: req.user?.branchId,
   });
 
   return res.status(200).json(products);
@@ -105,8 +107,8 @@ export const getCollections = asyncHandler(async (req, res) => {
     page: Number(req.query.page) || 1,
     limit: Number(req.query.limit) || 10,
     search: req.query.search,
-    categoryId: req.query.categoryId ? Number(req.query.categoryId) : undefined,
-    brandId: req.query.brandId ? Number(req.query.brandId) : undefined,
+    categoryId: req.query.categoryId,
+    brandId: req.query.brandId,
     status: req.query.status,
   });
 
@@ -122,6 +124,7 @@ export const getProductById = asyncHandler(async (req, res) => {
   return res.status(200).json(product);
 });
 
+// GET NEW ARRIVALS
 export const getNewArrivals = asyncHandler(async (req, res) => {
   const products = await getNewArrivalsService();
 
@@ -131,6 +134,7 @@ export const getNewArrivals = asyncHandler(async (req, res) => {
   });
 });
 
+// GET BEST SELLERS
 export const getBestSellers = asyncHandler(async (req, res) => {
   const products = await getBestSellersService();
 
@@ -140,6 +144,7 @@ export const getBestSellers = asyncHandler(async (req, res) => {
   });
 });
 
+// GET FEATURED PRODUCTS
 export const getFeaturedProducts = asyncHandler(async (req, res) => {
   const products = await getFeaturedProductsService();
 
@@ -147,4 +152,25 @@ export const getFeaturedProducts = asyncHandler(async (req, res) => {
     success: true,
     products,
   });
+});
+
+
+// GET ADMIN PRODUCTS
+export const getAdminProducts = asyncHandler(async (req, res) => {
+  const products = await getAdminProductsService({
+    page: Number(req.query.page) || 1,
+    limit: Number(req.query.limit) || 10,
+    search: req.query.search,
+    categoryId: req.query.categoryId ? Number(req.query.categoryId) : undefined,
+    brandId: req.query.brandId ? Number(req.query.brandId) : undefined,
+    status: req.query.status,
+  });
+
+  return res.status(200).json(products);
+});
+
+// GET ADMIN PRODUCT STATS
+export const getAdminProductStats = asyncHandler(async (req, res) => {
+  const stats = await getAdminProductStatsService();
+  return res.status(200).json(stats);
 });

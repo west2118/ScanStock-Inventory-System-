@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 type FormData = {
-  username: string;
+  email: string;
   password: string;
 };
 
@@ -29,7 +29,7 @@ const LoginPage = () => {
 
   const { login } = useAuth();
   const { formData, handleChange } = useForm<FormData>({
-    username: "",
+    email: "",
     password: "",
   });
 
@@ -162,9 +162,9 @@ const LoginPage = () => {
                         <Mail className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
-                        type="text"
-                        name="username"
-                        value={formData.username}
+                        type="email"
+                        name="email"
+                        value={formData.email}
                         onChange={handleChange}
                         className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         placeholder="admin@branchpulse.com"

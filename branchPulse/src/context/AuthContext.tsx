@@ -3,7 +3,7 @@ import { fetchWithAuth } from "../lib/utils";
 import type { AuthContextType, UserType } from "../lib/types";
 
 type LoginCredentials = {
-  username: string;
+  email: string;
   password: string;
 };
 

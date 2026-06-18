@@ -13,7 +13,7 @@ const ProductsPage = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { data, isLoading, filters, searchInput, setSearchInput } =
+  const { data, isLoading, filters, searchInput, setSearchInput, setParams } =
     useCollections();
   const { data: categories } = useCategories();
   const { data: brands } = useBrands();
@@ -45,7 +45,12 @@ const ProductsPage = () => {
 
         <div className="flex gap-6">
           {/* Sidebar Filters - Smaller width */}
-          <ProductsAside brands={brands} categories={categories} />
+          <ProductsAside 
+            brands={brands} 
+            categories={categories} 
+            filters={filters}
+            setParams={setParams}
+          />
 
           {/* Main Content - Wider */}
           <ProductsListed

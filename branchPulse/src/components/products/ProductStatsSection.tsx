@@ -14,7 +14,7 @@ type StatsData = {
 const ProductStatsSection = () => {
   const { data } = useSuspenseQuery<StatsData>({
     queryKey: ["products-stats"],
-    queryFn: fetchData(`${import.meta.env.VITE_API_URL}/products-stats`),
+    queryFn: fetchData(`${import.meta.env.VITE_API_URL}/admin/products-stats`),
   });
 
   const summaryStats: SummaryStatType[] = [
@@ -38,7 +38,7 @@ const ProductStatsSection = () => {
     },
     {
       title: "Best Selling Product",
-      value: data?.bestSellingProduct ?? "-",
+      value: data?.bestSellingProduct.length > 20 ? data.bestSellingProduct.slice(0, 20) + "..." : data.bestSellingProduct ?? "-",
       subtitle: "Highest units sold",
       subtitleColor: "text-gray-500",
       icon: TrendingUp,
@@ -47,7 +47,7 @@ const ProductStatsSection = () => {
     },
     {
       title: "Lowest Selling Product",
-      value: data?.lowestSellingProduct ?? "-",
+      value: data?.lowestSellingProduct.length > 20 ? data.lowestSellingProduct.slice(0, 20) + "..." : data.lowestSellingProduct ?? "-",
       subtitle: "Lowest units sold",
       subtitleColor: "text-gray-500",
       icon: TrendingDown,

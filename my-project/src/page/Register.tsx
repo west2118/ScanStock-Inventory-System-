@@ -51,6 +51,10 @@ const RegisterPage = () => {
       const result = await res.json();
 
       if (!res.ok) {
+        if (result.errors) {
+          const firstKey = Object.keys(result.errors)[0];
+          throw new Error(result.errors[firstKey][0]);
+        }
         throw new Error(result.message || "Registration failed");
       }
 
