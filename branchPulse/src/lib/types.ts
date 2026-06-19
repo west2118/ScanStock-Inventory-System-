@@ -49,9 +49,11 @@ export type BranchType = {
   branchName: string;
   createdAt: string;
   location: string;
-  managerId: number | null;
-  managerName: string | null;
-  managerUsername: string | null;
+  manager: {
+    id: number;
+    name: string | null;
+    email: string | null;
+  } | null;
   region: string;
   status: "active" | "inactive";
   totalSales: number;
@@ -239,18 +241,47 @@ export type ProductType = {
   id: number;
   sku: string;
   barcode: string;
+  slug?: string;
   productName: string;
+  shortDescription?: string;
+  description?: string;
+  features?: string;
   price: number;
   category: string;
+  categoryId?: number;
   location: string;
   status: string;
   vatType: string;
   createdAt: string;
   brand: string;
+  brandId?: number;
   unitsSold: number;
   storeUnitsSold: number;
   onlineUnitsSold: number;
   totalRevenue: number;
   storeRevenue: number;
   onlineRevenue: number;
+  images?: any[];
+  specifications?: any[];
+};
+
+export type BrandType = {
+  id: number;
+  name: string;
+  slug?: string;
+  logoUrl?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CategoryType = {
+  id: number;
+  name: string;
+  slug?: string;
+  parentId?: number;
+  parentName?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 };

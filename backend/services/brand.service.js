@@ -1,7 +1,8 @@
 import pool from "../config/db.js";
 
 export const createBrandService = async (data) => {
-  const { name, logoUrl, status = "active" } = data;
+  const { name, logoUrl, status = "active", slug: customSlug } = data;
+  const slug = customSlug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
   const existingBrand = await pool.query(
     `
@@ -23,13 +24,14 @@ export const createBrandService = async (data) => {
     `
     INSERT INTO brands (
       name,
+      slug,
       logo_url,
       status
     )
-    VALUES ($1, $2, $3)
+    VALUES ($1, $2, $3, $4)
     RETURNING *
     `,
-    [name, logoUrl ?? null, status],
+    [name, slug, logoUrl ?? null, status],
   );
 
   return result.rows[0];
@@ -40,13 +42,17 @@ export const getBrandsService = async () => {
     SELECT
       b.id,
       b.name,
+      b.slug,
+      b.logo_url AS "logoUrl",
+      b.status,
+      b.created_at AS "createdAt",
       COUNT(p.id)::INTEGER AS count
     FROM brands b
     LEFT JOIN products p
       ON p.brand_id = b.id
       AND p.status = 'active'
     WHERE b.status <> 'archived'
-    GROUP BY b.id, b.name
+    GROUP BY b.id, b.name, b.slug, b.logo_url, b.status, b.created_at
     ORDER BY b.name ASC
   `);
 
@@ -75,6 +81,7 @@ export const updateBrandService = async (id, data) => {
   }
 
   const updatedName = data.name ?? existingBrand.name;
+  const updatedSlug = data.slug ?? updatedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
   const duplicateBrand = await pool.query(
     `
@@ -98,14 +105,16 @@ export const updateBrandService = async (id, data) => {
     UPDATE brands
     SET
       name = $1,
-      logo_url = $2,
-      status = $3,
+      slug = $2,
+      logo_url = $3,
+      status = $4,
       updated_at = NOW()
-    WHERE id = $4
+    WHERE id = $5
     RETURNING *
     `,
     [
       updatedName,
+      updatedSlug,
       data.logoUrl ?? existingBrand.logo_url,
       data.status ?? existingBrand.status,
       id,

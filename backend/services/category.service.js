@@ -1,7 +1,8 @@
 import pool from "../config/db.js";
 
 export const createCategoryService = async (data) => {
-  const { name, parentId = null, status = "active" } = data;
+  const { name, parentId = null, status = "active", slug: customSlug } = data;
+  const slug = customSlug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
   console.log(data);
 
@@ -43,13 +44,14 @@ export const createCategoryService = async (data) => {
     `
     INSERT INTO categories (
       name,
+      slug,
       parent_id,
       status
     )
-    VALUES ($1, $2, $3)
+    VALUES ($1, $2, $3, $4)
     RETURNING *
     `,
-    [name, parentId, status],
+    [name, slug, parentId, status],
   );
 
   return result.rows[0];
@@ -60,12 +62,19 @@ export const getCategoriesService = async () => {
     SELECT
       c.id,
       c.name,
+      c.slug,
+      c.status,
+      c.created_at AS "createdAt",
+      parent.name AS "parentName",
       COUNT(p.id)::INTEGER AS count
     FROM categories c
+    LEFT JOIN categories parent
+      ON c.parent_id = parent.id
     LEFT JOIN products p
       ON p.category_id = c.id
       AND p.status = 'active'
-    GROUP BY c.id, c.name
+    WHERE c.status <> 'archived'
+    GROUP BY c.id, c.name, c.slug, c.status, c.created_at, parent.name
     ORDER BY c.name ASC
   `);
 
@@ -98,6 +107,7 @@ export const updateCategoryService = async (id, data) => {
   }
 
   const updatedName = data.name ?? existingCategory.name;
+  const updatedSlug = data.slug ?? updatedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
   const updatedParentId = data.parentId ?? existingCategory.parent_id;
 
@@ -130,13 +140,14 @@ export const updateCategoryService = async (id, data) => {
     UPDATE categories
     SET
       name = $1,
-      parent_id = $2,
-      status = $3,
+      slug = $2,
+      parent_id = $3,
+      status = $4,
       updated_at = NOW()
-    WHERE id = $4
+    WHERE id = $5
     RETURNING *
     `,
-    [updatedName, updatedParentId, data.status ?? existingCategory.status, id],
+    [updatedName, updatedSlug, updatedParentId, data.status ?? existingCategory.status, id],
   );
 
   return result.rows[0];
@@ -182,6 +193,7 @@ export const getChildCategoriesService = async () => {
       c.id,
       c.parent_id AS "parentId",
       c.name,
+      c.slug,
       c.status,
       c.image_url AS "imageUrl",
       c.created_at AS "createdAt",

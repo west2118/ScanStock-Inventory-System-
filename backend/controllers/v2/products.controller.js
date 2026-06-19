@@ -12,6 +12,7 @@ import {
   getAdminProductStatsService,
   updateProductService,
   getFeaturedProductsService,
+  getAdminProductByIdService,
 } from "../../services/product.service.js";
 
 // CREATE PRODUCT
@@ -173,4 +174,13 @@ export const getAdminProducts = asyncHandler(async (req, res) => {
 export const getAdminProductStats = asyncHandler(async (req, res) => {
   const stats = await getAdminProductStatsService();
   return res.status(200).json(stats);
+});
+
+// GET ADMIN PRODUCT BY ID
+export const getAdminProductById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const product = await getAdminProductByIdService(id);
+
+  return res.status(200).json(product);
 });

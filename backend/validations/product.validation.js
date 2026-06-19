@@ -4,7 +4,7 @@ export const createProductSchema = z.object({
   sku: z.string().trim().min(1),
   barcode: z.string().trim().optional(),
 
-  slug: z.string().trim().min(1),
+  slug: z.string().optional().nullable(),
 
   productName: z.string().trim().min(2, "Product name is required").max(255),
 

@@ -24,6 +24,8 @@ export const createProductService = async (data) => {
       throw error;
     }
 
+    const slug = data.slug || data.productName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
     const productResult = await client.query(
       `
       INSERT INTO products (
@@ -48,7 +50,7 @@ export const createProductService = async (data) => {
       [
         data.sku,
         data.barcode,
-        data.slug,
+        slug,
         data.productName,
         data.shortDescription,
         data.description,
@@ -135,6 +137,9 @@ export const updateProductService = async (productId, data) => {
       throw new Error("A product with this name already exists for this brand");
     }
 
+    const updatedProductName = data.productName;
+    const slug = data.slug || updatedProductName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
     const productResult = await client.query(
       `
       UPDATE products
@@ -158,7 +163,7 @@ export const updateProductService = async (productId, data) => {
       [
         data.sku,
         data.barcode,
-        data.slug,
+        slug,
         data.productName,
         data.shortDescription,
         data.description,
@@ -585,6 +590,78 @@ export const getAdminProductStatsService = async () => {
     console.error("Error fetching admin product stats:", error);
     throw new Error("Failed to fetch admin product stats");
   }
+};
+
+// GET ADMIN PRODUCT BY ID
+export const getAdminProductByIdService = async (productId) => {
+  const productResult = await pool.query(
+    `
+    SELECT
+      p.id,
+      p.sku,
+      p.barcode,
+      p.slug,
+      p.product_name AS "productName",
+      p.short_description AS "shortDescription",
+      p.description,
+      p.features,
+      p.price,
+      p.status,
+      p.vat_type AS "vatType",
+      p.category_id AS "categoryId",
+      c.name AS "category",
+      p.brand_id AS "brandId",
+      b.name AS "brand",
+      p.created_at AS "createdAt",
+      p.updated_at AS "updatedAt"
+    FROM products p
+    LEFT JOIN categories c ON c.id = p.category_id
+    LEFT JOIN brands b ON b.id = p.brand_id
+    WHERE p.id = $1
+    `,
+    [productId],
+  );
+
+  if (productResult.rowCount === 0) {
+    const error = new Error("Product not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const product = productResult.rows[0];
+
+  const specificationsResult = await pool.query(
+    `
+    SELECT
+      id,
+      name,
+      value
+    FROM product_specifications
+    WHERE product_id = $1
+    ORDER BY id ASC
+    `,
+    [product.id],
+  );
+
+  const imagesResult = await pool.query(
+    `
+    SELECT
+      id,
+      image_url AS "imageUrl",
+      sort_order AS "sortOrder",
+      is_primary AS "isPrimary"
+    FROM product_images
+    WHERE product_id = $1
+    ORDER BY sort_order ASC
+    `,
+    [product.id],
+  );
+
+  return {
+    ...product,
+    specifications: specificationsResult.rows,
+    images: imagesResult.rows,
+  };
 };
 
 // GET PRODUCT BY ID

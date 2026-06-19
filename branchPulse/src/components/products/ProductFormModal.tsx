@@ -24,6 +24,9 @@ type FormData = {
   barcode: string;
   slug: string;
   productName: string;
+  shortDescription: string;
+  description: string;
+  features: string;
   price: number | string;
   categoryId: number | string;
   brandId: number | string;
@@ -45,6 +48,9 @@ const ProductFormModal = ({
     barcode: "",
     slug: "",
     productName: "",
+    shortDescription: "",
+    description: "",
+    features: "",
     price: "",
     categoryId: "",
     brandId: "",
@@ -67,7 +73,7 @@ const ProductFormModal = ({
   const { data: selectedProduct, isLoading } = useQuery<ProductType>({
     queryKey: ["product-data", selectedProductId],
     queryFn: fetchData(
-      `http://localhost:5001/api/product/${selectedProductId}`,
+      `${import.meta.env.VITE_API_URL}/admin/products/${selectedProductId}`,
     ),
     enabled: !!selectedProductId,
   });
@@ -79,6 +85,9 @@ const ProductFormModal = ({
     setField("barcode", selectedProduct.barcode || "");
     setField("slug", selectedProduct.slug || "");
     setField("productName", selectedProduct.productName);
+    setField("shortDescription", selectedProduct.shortDescription || "");
+    setField("description", selectedProduct.description || "");
+    setField("features", selectedProduct.features || "");
     setField("price", selectedProduct.price);
     setField("categoryId", selectedProduct.categoryId || "");
     setField("vatType", selectedProduct.vatType || "");
@@ -103,7 +112,7 @@ const ProductFormModal = ({
         if (!selectedProduct) return;
 
         response = await fetch(
-          `http://localhost:5001/api/product/${selectedProduct.id}`,
+          `http://localhost:5001/api/products/${selectedProduct.id}`,
           {
             method: "PUT",
             credentials: "include",
@@ -114,7 +123,7 @@ const ProductFormModal = ({
           },
         );
       } else {
-        response = await fetch("http://localhost:5001/api/product", {
+        response = await fetch("http://localhost:5001/api/products", {
           method: "POST",
           credentials: "include",
           headers: {
@@ -205,7 +214,7 @@ const ProductFormModal = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Slug
+                Slug (Optional)
               </label>
               <input
                 type="text"
@@ -214,6 +223,49 @@ const ProductFormModal = ({
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                 placeholder="enter-product-slug"
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from name.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Short Description
+              </label>
+              <input
+                type="text"
+                name="shortDescription"
+                value={formData.shortDescription}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                placeholder="Brief summary of the product"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                placeholder="Detailed product description"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Features
+              </label>
+              <textarea
+                name="features"
+                value={formData.features}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                placeholder="Key features (e.g. separated by commas or newlines)"
               />
             </div>
 

@@ -71,10 +71,10 @@ const BranchDetailsModal = ({
                 Branch Manager
               </p>
               <p className="text-sm text-gray-500">
-                {selectedBranch.managerName}
+                {selectedBranch.manager?.name}
               </p>
               <p className="text-xs text-gray-400">
-                {selectedBranch.managerUsername}
+                {selectedBranch.manager?.email}
               </p>
             </div>
           </div> */}

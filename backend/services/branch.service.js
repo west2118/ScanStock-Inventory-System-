@@ -124,10 +124,9 @@ export const getBranchOptionsService = async () => {
   return result.rows;
 };
 
-export const getBranchesService = async (
-  client,
-  { page = 1, limit = 10, search, status, region },
-) => {
+export const getBranchesService = async ({
+  page = 1, limit = 10, search, status, region
+} = {}) => {
   const offset = (page - 1) * limit;
 
   const conditions = [];
@@ -140,9 +139,9 @@ export const getBranchesService = async (
       (
         b.branch_name ILIKE $${idx}
         OR b.branch_code ILIKE $${idx}
-        OR b.location ILIKE $${idx}
+        OR b.address ILIKE $${idx}
         OR b.region ILIKE $${idx}
-        OR u.name ILIKE $${idx}
+        OR CONCAT(u.first_name, ' ', u.last_name) ILIKE $${idx}
       )
     `);
 
@@ -188,16 +187,22 @@ export const getBranchesService = async (
 
     SELECT
       b.id,
-      b.manager_id AS "managerId",
       b.region,
       b.branch_name AS "branchName",
       b.branch_code AS "branchCode",
-      b.location,
+      b.address AS location,
       b.status,
       b.created_at AS "createdAt",
 
-      u.name AS "managerName",
-      u.username AS "managerUsername",
+      CASE 
+        WHEN b.manager_id IS NOT NULL THEN
+          json_build_object(
+            'id', b.manager_id,
+            'name', NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''),
+            'email', NULLIF(u.email, '')
+          )
+        ELSE NULL
+      END AS manager,
 
       COALESCE(s.total_sales, 0) AS "totalSales",
       COALESCE(i.total_inventory, 0) AS "totalInventory"
@@ -207,7 +212,7 @@ export const getBranchesService = async (
     LEFT JOIN users u
       ON u.id = b.manager_id
 
-    LEFT JOIN sales s
+    LEFT JOIN sales
       ON s.branch_id = b.id
 
     LEFT JOIN inventory i
@@ -230,8 +235,8 @@ export const getBranchesService = async (
   `;
 
   const [branchesResult, countResult] = await Promise.all([
-    client.query(branchesQuery, [...values, limit, offset]),
-    client.query(countQuery, values),
+    pool.query(branchesQuery, [...values, limit, offset]),
+    pool.query(countQuery, values),
   ]);
 
   const total = Number(countResult.rows[0].total);

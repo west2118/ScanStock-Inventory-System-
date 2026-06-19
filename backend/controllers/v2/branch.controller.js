@@ -19,12 +19,9 @@ export const createBranch = asyncHandler(async (req, res) => {
 });
 
 export const getBranches = asyncHandler(async (req, res) => {
-  const branches = await getBranchesService();
+  const branches = await getBranchesService(req.query);
 
-  return res.status(200).json({
-    success: true,
-    data: branches,
-  });
+  return res.status(200).json(branches);
 });
 
 export const getBranchById = asyncHandler(async (req, res) => {
@@ -84,7 +81,7 @@ export const deleteBranch = asyncHandler(async (req, res) => {
   });
 });
 
-// ----------- FIXING THE TOP ------------------
+// ----------- FIXING THE BOTTOM ------------------
 
 export const getBranchesSummaryStats = async (req, res) => {
   try {

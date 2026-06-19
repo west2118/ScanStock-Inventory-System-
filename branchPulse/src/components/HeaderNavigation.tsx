@@ -9,7 +9,15 @@ const pageConfig: Record<string, { title: string; description: string }> = {
   },
   "/admin/products": {
     title: "Products",
-    description: " Manage your product catalog",
+    description: "Manage your product catalog",
+  },
+  "/admin/brands": {
+    title: "Brands",
+    description: "Manage product brands and logos",
+  },
+  "/admin/categories": {
+    title: "Categories",
+    description: "Manage product categories and taxonomy",
   },
   "/admin/branches": {
     title: "Branches",

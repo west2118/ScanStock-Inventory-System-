@@ -57,11 +57,11 @@ const BranchesTableRow = ({
         </div>
       </td>
       <td className="py-3 px-4">
-        {branch.managerId ? (
+        {branch.manager ? (
           <div>
-            <p className="text-sm text-gray-700">{branch.manager ?? "-"}</p>
+            <p className="text-sm text-gray-700">{branch.manager.name ?? "-"}</p>
             <p className="text-xs text-gray-400">
-              {branch.managerEmail ?? "-"}
+              {branch.manager.email ?? "-"}
             </p>
           </div>
         ) : (

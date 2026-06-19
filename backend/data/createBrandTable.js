@@ -5,6 +5,7 @@ const createBrandTable = async () => {
     CREATE TABLE IF NOT EXISTS brands (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) UNIQUE NOT NULL,
+      slug VARCHAR(255) UNIQUE,
       logo_url TEXT,
       status VARCHAR(50) DEFAULT 'active',
 

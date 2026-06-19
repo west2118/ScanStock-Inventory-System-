@@ -7,7 +7,7 @@ import {
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { authorizeRoles } from "../middlewares/authRole.js";
 import { validate } from "../middlewares/validate.js";
-import { createProductSchema } from "../validations/product.validation.js";
+import { createProductSchema, updateProductSchema } from "../validations/product.validation.js";
 import {
   createProduct,
   deleteProduct,
@@ -21,6 +21,7 @@ import {
   getAdminProductStats,
   updateProduct,
   getFeaturedProducts,
+  getAdminProductById,
 } from "../controllers/v2/products.controller.js";
 
 const router = express.Router();
@@ -29,12 +30,13 @@ router.post("/products", validate(createProductSchema), createProduct);
 router.put(
   "/products/:id",
   verifyToken,
-  validate(createProductSchema),
+  validate(updateProductSchema),
   updateProduct,
 );
 router.put("/products/:id/delete", verifyToken, deleteProduct);
 router.get("/products", verifyToken, getStoreProducts);
 router.get("/admin/products", verifyToken, getAdminProducts);
+router.get("/admin/products/:id", verifyToken, getAdminProductById);
 router.get("/admin/products-stats", verifyToken, getAdminProductStats);
 router.get("/collections", getCollections);
 router.get("/collections/:id", getProductById);

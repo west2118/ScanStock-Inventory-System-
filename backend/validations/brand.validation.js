@@ -7,7 +7,8 @@ export const createBrandSchema = z
       .trim()
       .min(2, "Brand name must be at least 2 characters")
       .max(100, "Brand name cannot exceed 100 characters"),
-    logoUrl: z.string().url("Invalid logo URL").optional().nullable(),
+    logoUrl: z.union([z.string().url("Invalid logo URL"), z.literal("")]).optional().nullable(),
+    slug: z.string().optional().nullable(),
     status: z.enum(["active", "inactive"]).default("active"),
   })
   .strict();

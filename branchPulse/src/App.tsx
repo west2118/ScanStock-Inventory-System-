@@ -20,6 +20,8 @@ import Inventory from "./pages/Inventory";
 import Employees from "./pages/Employees";
 import Leaderboard from "./pages/Leaderboard";
 import ProductsPage from "./pages/Products";
+import BrandsPage from "./pages/Brands";
+import CategoriesPage from "./pages/Categories";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -44,6 +46,8 @@ const router = createBrowserRouter(
         <Route path="users" element={<UserManagementPage />} />
         <Route path="settings" element={<SystemSettingsPage />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="brands" element={<BrandsPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
       </Route>
     </>,
   ),
