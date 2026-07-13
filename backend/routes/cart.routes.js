@@ -1,5 +1,5 @@
 import express from "express";
-import { verifyToken } from "../middlewares/verifyToken.js";
+import { verifyToken, optionalVerifyToken } from "../middlewares/verifyToken.js";
 import { validate } from "../middlewares/validate.js";
 import {
   addCart,
@@ -12,8 +12,8 @@ import {
 
 const router = express.Router();
 
-router.get("/carts", verifyToken, getCart);
-router.get("/carts/count", verifyToken, getCartCount);
+router.get("/carts", optionalVerifyToken, getCart);
+router.get("/carts/count", optionalVerifyToken, getCartCount);
 router.post("/carts/add", verifyToken, addCart);
 router.post("/carts/minus", verifyToken, minusCart);
 router.delete("/carts/remove", verifyToken, removeCartItem);

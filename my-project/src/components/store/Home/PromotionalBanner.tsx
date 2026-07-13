@@ -1,6 +1,23 @@
-import React from "react";
+import { Award, Zap } from "lucide-react";
+const PromotionalBanner = () => {
+  // Promotional Banners
+  const promoBanners = [
+    {
+      title: "Build Your Dream PC",
+      subtitle: "Free assembly with purchase of complete system",
+      buttonText: "Customize Now",
+      color: "from-blue-600 to-purple-600",
+      icon: <Zap className="w-12 h-12" />,
+    },
+    {
+      title: "Student Discount",
+      subtitle: "10% OFF on all components with valid ID",
+      buttonText: "Shop Now",
+      color: "from-green-600 to-teal-600",
+      icon: <Award className="w-12 h-12" />,
+    },
+  ];
 
-const PromotionalBanner = ({ promoBanners }: { promoBanners: any }) => {
   return (
     <section className="py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -51,7 +51,7 @@ export const createStockMovementService = async (data) => {
         handled_by,
         product_id,
         reference,
-        type,
+        movement_type,
         quantity,
         price,
         before_stock,
@@ -63,7 +63,7 @@ export const createStockMovementService = async (data) => {
         handled_by AS "handledBy",
         product_id AS "productId",
         reference,
-        type,
+        movement_type AS type,
         quantity,
         price,
         before_stock AS "beforeStock",
@@ -244,13 +244,13 @@ export const inventoryMovementSummaryStatsService = async (branchId) => {
     SELECT
       COUNT(id) as "totalMovements",
 
-      COUNT(*) FILTER (WHERE type = 'IN') AS "totalStockIn",
+      COUNT(*) FILTER (WHERE movement_type = 'IN') AS "totalStockIn",
 
-      COUNT(*) FILTER (WHERE type = 'OUT') AS "totalStockOut",
+      COUNT(*) FILTER (WHERE movement_type = 'OUT') AS "totalStockOut",
 
       COALESCE(
-        SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END) -
-        SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END),
+        SUM(CASE WHEN movement_type = 'IN' THEN quantity ELSE 0 END) -
+        SUM(CASE WHEN movement_type = 'OUT' THEN quantity ELSE 0 END),
         0
       ) AS "totalNetChange"
 
@@ -267,7 +267,7 @@ export const findStockMovementByIdService = async (id) => {
   const query = `
       SELECT
         sm.id,
-        sm.type,
+        sm.movement_type AS type,
         sm.quantity,
         sm.reference,
         sm.before_stock AS "beforeStock",
@@ -277,14 +277,15 @@ export const findStockMovementByIdService = async (id) => {
         p.id AS "productId",
         p.product_name AS "productName",
         p.barcode,
-        p.category,
+        c.name AS category,
 
         u.id AS "handledBy",
-        u.name AS "handledByName",
+        CONCAT(u.first_name, ' ', u.last_name) AS "handledByName",
         u.role AS "handledByRole"
 
       FROM stock_movements sm
       JOIN products p ON sm.product_id = p.id
+      LEFT JOIN categories c ON p.category_id = c.id
       JOIN users u ON sm.handled_by = u.id
       WHERE sm.id = $1
     `;

@@ -9,10 +9,9 @@ import StockAdjustmentsTable from "../../components/Admin/Stock-Adjustments/Stoc
 import type { StockAdjustmentType } from "../../utils/types";
 import { useState } from "react";
 import StockAdjustmentDetailsModal from "../../components/Admin/Stock-Adjustments/StockAdjustmentDetailsModal";
-import ApproveStockAdjustmentModal from "../../components/Admin/Stock-Adjustments/ApproveStockAdjustmentModal";
+import StockAdjustmentActionModal from "../../components/Admin/Stock-Adjustments/StockAdjustmentActionModal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import RejectStockAdjustmentModal from "../../components/Admin/Stock-Adjustments/RejectStockAdjustmentModal";
 import StockAdjustmentSummaryStats from "../../components/Admin/Stock-Adjustments/StockAdjustmentSummaryStats";
 
 const StockAdjustmentsPage = () => {
@@ -54,13 +53,14 @@ const StockAdjustmentsPage = () => {
   };
 
   const approveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (reason: string) => {
       const response = await fetch(
         `http://localhost:5001/api/stock-adjustments/${selectedStockAdjustment?.id}/approve`,
         {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason }),
         },
       );
 
@@ -85,14 +85,14 @@ const StockAdjustmentsPage = () => {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: async (rejectionReason: string) => {
+    mutationFn: async (reason: string) => {
       const response = await fetch(
         `http://localhost:5001/api/stock-adjustments/${selectedStockAdjustment?.id}/reject`,
         {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rejectionReason }),
+          body: JSON.stringify({ reason }),
         },
       );
 
@@ -140,23 +140,22 @@ const StockAdjustmentsPage = () => {
         />
       )}
 
-      {isApproveModalOpen && (
-        <ApproveStockAdjustmentModal
-          isModalOpen={isApproveModalOpen}
+      {(isApproveModalOpen || isRejectModalOpen) && (
+        <StockAdjustmentActionModal
+          isModalOpen={isApproveModalOpen || isRejectModalOpen}
           isCloseModal={handleCloseModal}
           stockAdjustment={selectedStockAdjustment}
-          onApprove={() => approveMutation.mutate()}
-          isApproving={approveMutation.isPending}
-        />
-      )}
-
-      {isRejectModalOpen && (
-        <RejectStockAdjustmentModal
-          isModalOpen={isRejectModalOpen}
-          isCloseModal={handleCloseModal}
-          stockAdjustment={selectedStockAdjustment}
-          onReject={(reason) => rejectMutation.mutate(reason)}
-          isRejecting={rejectMutation.isPending}
+          onAction={(reason) =>
+            isApproveModalOpen
+              ? approveMutation.mutate(reason)
+              : rejectMutation.mutate(reason)
+          }
+          isProcessing={
+            isApproveModalOpen
+              ? approveMutation.isPending
+              : rejectMutation.isPending
+          }
+          actionType={isApproveModalOpen ? "approve" : "reject"}
         />
       )}
     </main>

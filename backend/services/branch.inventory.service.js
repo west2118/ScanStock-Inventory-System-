@@ -1,9 +1,11 @@
 export const updateProductStockService = async ({
+  client,
   id,
   branchId,
   action,
   quantity,
-  notes,
+  price,
+  reference,
   handledBy,
 }) => {
   try {
@@ -38,7 +40,7 @@ export const updateProductStockService = async ({
       inventory = inventoryRes.rows[0];
     }
 
-    const beforeStock = inventory.stock;
+    const beforeStock = Number(inventory.stock);
     let afterStock = beforeStock;
 
     // 🔥 Compute stock
@@ -74,24 +76,28 @@ export const updateProductStockService = async ({
       INSERT INTO stock_movements (
         handled_by,
         product_id,
-        branch_id,
-        type,
+        movement_type,
         quantity,
+        price,
         before_stock,
         after_stock,
-        reference
+        reference_type,
+        reference_id,
+        branch_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       `,
       [
         handledBy,
         id,
-        branchId,
         action,
         quantity,
+        price,
         beforeStock,
         afterStock,
-        notes || null,
+        "Store Transaction",
+        reference || null,
+        branchId
       ],
     );
 

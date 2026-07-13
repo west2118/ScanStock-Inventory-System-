@@ -12,10 +12,14 @@ const Sidebar = ({ sidebarOpen }: { sidebarOpen: any }) => {
 
   const BASE_PATH = `/${user?.role}`;
 
+  const isCentralWarehouse = user?.branchName?.toLowerCase() === "central warehouse" || user?.branchName?.toLowerCase()?.includes("central");
+
   const filteredMenu = navigation
     .map((item) => {
       // If normal item → check its roles
       if (item.roles?.includes(user?.role ?? "")) {
+        if (item.excludeFromCentral && isCentralWarehouse) return null;
+        if (item.centralOnly && !isCentralWarehouse) return null;
         return item;
       }
 

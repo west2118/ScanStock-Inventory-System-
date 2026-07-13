@@ -65,7 +65,7 @@ export const getCartService = async (customerId) => {
   return itemsResult.rows;
 };
 
-export const addCartService = async ({ customerId, productId, quantity = 1 }) => {
+export const addCartService = async ({ customerId, productId, quantity = 1, isBuyNow = false }) => {
   const client = await pool.connect();
 
   try {
@@ -97,8 +97,18 @@ export const addCartService = async ({ customerId, productId, quantity = 1 }) =>
       cartId = cartResult.rows[0].id;
     }
 
-    const itemResult = await client.query(
-      `
+    if (isBuyNow) {
+      await client.query(
+        `
+        UPDATE cart_items
+        SET is_selected = false
+        WHERE cart_id = $1
+        `,
+        [cartId]
+      );
+    }
+
+    let queryStr = `
       INSERT INTO cart_items (cart_id, product_id, quantity)
       VALUES ($1, $2, $3)
       ON CONFLICT (cart_id, product_id)
@@ -106,9 +116,22 @@ export const addCartService = async ({ customerId, productId, quantity = 1 }) =>
         quantity = cart_items.quantity + $3,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *
-      `,
-      [cartId, productId, quantity],
-    );
+    `;
+
+    if (isBuyNow) {
+      queryStr = `
+        INSERT INTO cart_items (cart_id, product_id, quantity, is_selected)
+        VALUES ($1, $2, $3, true)
+        ON CONFLICT (cart_id, product_id)
+        DO UPDATE SET
+          quantity = cart_items.quantity + $3,
+          is_selected = true,
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING *
+      `;
+    }
+
+    const itemResult = await client.query(queryStr, [cartId, productId, quantity]);
 
     await client.query(
       `

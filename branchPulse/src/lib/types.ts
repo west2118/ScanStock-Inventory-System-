@@ -15,6 +15,8 @@ export type UserSummaryStatsType = {
 export type UserType = {
   id: number;
   name: string;
+  firstName?: string;
+  lastName?: string;
   username: string;
   role: string;
   status: string;
@@ -65,6 +67,12 @@ export type ChartData = {
   value: number;
 };
 
+export type MonthlySalesData = {
+  name: string;
+  storeRevenue: number;
+  deliveryRevenue: number;
+};
+
 export type EmployeeProductivity = {
   name: string;
   employees: number;
@@ -80,7 +88,7 @@ export type DashboardDataType = {
   };
   topPerforming: ChartData;
   needsImprovement: ChartData;
-  monthlySalesOverview: ChartData[];
+  monthlySalesOverview: MonthlySalesData[];
   branchPerformance: ChartData[];
   inventoryDistribution: ChartData[];
   employeeProductivityOverview: EmployeeProductivity[];

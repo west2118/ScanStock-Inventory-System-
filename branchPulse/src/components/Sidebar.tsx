@@ -164,11 +164,13 @@ const Sidebar = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-semibold">
-                {user?.name?.charAt(0).toUpperCase()}
+                {(user?.name || user?.firstName || "U").charAt(0).toUpperCase()}
               </div>
 
               <div>
-                <p className="font-semibold text-gray-900">{user?.name}</p>
+                <p className="font-semibold text-gray-900">
+                  {user?.name || (user?.firstName ? `${user.firstName} ${user.lastName}` : "User")}
+                </p>
                 <p className="text-sm text-gray-500">
                   {user?.role
                     ?.replaceAll("_", " ")

@@ -9,7 +9,7 @@ const CartItems = ({ cartItems }: { cartItems: CartItem[] }) => {
       {/* Cart Items List */}
       <div className="space-y-4">
         {cartItems?.map((item) => (
-          <CartItemCard item={item} />
+          <CartItemCard key={item.productId} item={item} />
         ))}
       </div>
     </div>

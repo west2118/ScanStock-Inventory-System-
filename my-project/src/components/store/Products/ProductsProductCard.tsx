@@ -4,11 +4,14 @@ import type { ProductType } from "../../../utils/types";
 import { useAuth } from "../../../context/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchData, fetchWithAuth } from "../../../utils/utils";
+import { useAddCart } from "../Hooks/useAddCart";
+import { toast } from "react-toastify";
 
 const ProductsProductCard = ({ product }: { product: ProductType }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const addCartMutation = useAddCart();
 
   const { data: wishlistItems = [] } = useQuery({
     queryKey: ["wishlist"],
@@ -62,6 +65,8 @@ const ProductsProductCard = ({ product }: { product: ProductType }) => {
             e.stopPropagation();
             if (user) {
               toggleFavoriteMutation.mutate();
+            } else {
+              navigate("/login");
             }
           }}
           disabled={toggleFavoriteMutation.isPending}
@@ -108,23 +113,50 @@ const ProductsProductCard = ({ product }: { product: ProductType }) => {
 
         {/* Add To Cart Button */}
         <div className="mt-auto pt-3 flex gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            Buy Now
-          </button>
+          {product.stock <= 0 ? (
+            <button
+              disabled
+              className="flex-1 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed"
+            >
+              Out of Stock
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!user) return navigate("/login");
+                  addCartMutation.mutate(
+                    { productId: product.id, quantity: 1, isBuyNow: true },
+                    {
+                      onSuccess: () => navigate("/cart"),
+                    }
+                  );
+                }}
+                disabled={addCartMutation.isPending}
+                className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                Buy Now
+              </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            className="h-10 w-10 flex items-center justify-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <ShoppingCartIcon className="w-4 h-4" />
-          </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!user) return navigate("/login");
+                  addCartMutation.mutate(
+                    { productId: product.id, quantity: 1 },
+                    {
+                      onSuccess: () => toast.success("Added to cart successfully!"),
+                    }
+                  );
+                }}
+                disabled={addCartMutation.isPending}
+                className="h-10 w-10 flex items-center justify-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                <ShoppingCartIcon className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

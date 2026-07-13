@@ -14,3 +14,16 @@ export const verifyToken = (req, res, next) => {
     res.sendStatus(401);
   }
 };
+export const optionalVerifyToken = (req, res, next) => {
+  const token = req.cookies.accessToken;
+  if (!token) {
+    return next();
+  }
+
+  try {
+    req.user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    next();
+  } catch (error) {
+    next();
+  }
+};

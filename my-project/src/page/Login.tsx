@@ -81,7 +81,7 @@ const LoginPage = () => {
 
             <div className="mt-8 pt-8 border-t border-gray-200">
               <p className="text-sm text-gray-400">
-                © 2024 ByteForge. All rights reserved.
+                © 2026 ByteForge. All rights reserved.
               </p>
             </div>
           </div>

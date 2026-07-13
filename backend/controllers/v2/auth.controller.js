@@ -35,16 +35,21 @@ export const refresh = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    return res.sendStatus(401);
+    return res.status(200).json({ success: false, message: "No refresh token" });
   }
 
-  const { accessToken, refreshToken: newRefreshToken } =
-    await refreshTokenService(refreshToken);
+  try {
+    const { accessToken, refreshToken: newRefreshToken } =
+      await refreshTokenService(refreshToken);
 
-  res
-    .cookie("accessToken", accessToken, accessTokenCookie)
-    .cookie("refreshToken", newRefreshToken, refreshTokenCookie)
-    .json({ success: true });
+    res
+      .cookie("accessToken", accessToken, accessTokenCookie)
+      .cookie("refreshToken", newRefreshToken, refreshTokenCookie)
+      .json({ success: true });
+  } catch (error) {
+    res.clearCookie("accessToken").clearCookie("refreshToken");
+    return res.status(200).json({ success: false, message: "Invalid refresh token" });
+  }
 });
 
 export const logout = asyncHandler(async (req, res) => {
@@ -61,6 +66,8 @@ export const logout = asyncHandler(async (req, res) => {
 });
 
 export const me = asyncHandler(async (req, res) => {
+  if (!req.user) return res.status(200).json(null);
+  
   const result = await meService(req.user.id);
 
   res.status(200).json(result);

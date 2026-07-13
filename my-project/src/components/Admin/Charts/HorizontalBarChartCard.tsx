@@ -7,6 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { truncateWords } from "../../../utils/utils";
 
 type HorizontalBarChartCardProps = {
   data: {
@@ -16,12 +17,17 @@ type HorizontalBarChartCardProps = {
 };
 
 const HorizontalBarChartCard = ({ data }: HorizontalBarChartCardProps) => {
+  const chartData = data.map(item => ({
+    ...item,
+    name: truncateWords(item.name, 3)
+  }));
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
-        data={data}
+        data={chartData}
         layout="vertical" // ✅ makes it horizontal
-        margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
+        margin={{ top: 10, right: 10, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
 
@@ -34,7 +40,6 @@ const HorizontalBarChartCard = ({ data }: HorizontalBarChartCardProps) => {
           dataKey="name"
           tick={{ fontSize: 12 }}
           stroke="#6b7280"
-          width={120}
         />
 
         <Tooltip

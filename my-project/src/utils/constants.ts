@@ -17,30 +17,42 @@ import {
 } from "lucide-react";
 
 // Navigation items
-export const navigation = [
+export type NavigationItem = {
+  id: string;
+  name: string;
+  roles: string[];
+  icon: any;
+  excludeFromCentral?: boolean;
+  centralOnly?: boolean;
+};
+
+export const navigation: NavigationItem[] = [
   {
     id: "",
     name: "Dashboard",
     roles: ["admin", "branch_manager"],
     icon: LayoutDashboard,
   },
-  // {
-  //   id: "POS",
-  //   name: "POS",
-  //   roles: ["admin", "branch_manager", "staff"],
-  //   icon: PercentSquareIcon,
-  // },
-  // {
-  //   id: "transactions",
-  //   name: "Transactions",
-  //   roles: ["admin", "branch_manager", "staff"],
-  //   icon: Receipt,
-  // },
+  {
+    id: "pos",
+    name: "POS",
+    roles: ["admin", "branch_manager", "staff"],
+    icon: PercentSquareIcon,
+    excludeFromCentral: true,
+  },
+  {
+    id: "transactions",
+    name: "Transactions",
+    roles: ["admin", "branch_manager", "staff"],
+    icon: Receipt,
+    excludeFromCentral: true,
+  },
   {
     id: "orders",
     name: "Orders",
     roles: ["admin", "branch_manager", "staff"],
     icon: Package2Icon,
+    centralOnly: true,
   },
   {
     id: "products",

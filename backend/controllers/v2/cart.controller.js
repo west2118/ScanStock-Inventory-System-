@@ -9,6 +9,7 @@ import {
 import { asyncHandler } from "../../utils/helper.js";
 
 export const getCart = asyncHandler(async (req, res) => {
+  if (!req.user) return res.status(200).json([]);
   const customerId = req.user.id;
 
   const cart = await getCartService(customerId);
@@ -18,7 +19,7 @@ export const getCart = asyncHandler(async (req, res) => {
 
 export const addCart = asyncHandler(async (req, res) => {
   const customerId = req.user.id;
-  const { productId, quantity } = req.body;
+  const { productId, quantity, isBuyNow } = req.body;
 
   if (!productId) {
     return res.status(400).json({
@@ -30,6 +31,7 @@ export const addCart = asyncHandler(async (req, res) => {
     customerId,
     productId,
     quantity: quantity || 1,
+    isBuyNow,
   });
 
   return res.status(200).json({
@@ -60,6 +62,7 @@ export const minusCart = asyncHandler(async (req, res) => {
 });
 
 export const getCartCount = asyncHandler(async (req, res) => {
+  if (!req.user) return res.status(200).json({ count: 0 });
   const customerId = req.user.id;
   const count = await getCartCountService(customerId);
   return res.status(200).json(count);

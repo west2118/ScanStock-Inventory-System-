@@ -13,8 +13,10 @@ import PerformanceComparisonChart from "../charts/PerformanceComparisonChart";
 const DashboardPage = () => {
   const { data } = useSuspenseQuery<DashboardDataType>({
     queryKey: ["dashboard-data"],
-    queryFn: fetchData(`${import.meta.env.VITE_API_URL}/dashboard`),
+    queryFn: fetchData(`${import.meta.env.VITE_API_URL}/dashboard/branchPulse`),
   });
+
+  console.log("Data: ", data)
 
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white">

@@ -1,6 +1,15 @@
 import React from "react";
 
-const FeaturedCategories = ({ categories }: { categories: any }) => {
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { fetchData } from "../../../utils/utils";
+
+const FeaturedCategories = () => {
+  const { data: categoriesResponse } = useSuspenseQuery({
+    queryKey: ["categories-child-data"],
+    queryFn: fetchData(`${import.meta.env.VITE_API_URL}/categories/childrens`),
+  });
+
+  const categories = categoriesResponse?.categories ?? [];
   return (
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

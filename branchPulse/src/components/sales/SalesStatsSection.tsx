@@ -4,7 +4,7 @@ import StatsCards from "../StatsCards";
 import { formatPesoShort } from "../../lib/utils";
 
 type SalesStatsSectionProps = {
-  summaryStatsData: {
+  summaryStatsData?: {
     avgSalesPerBranch: number;
     bestPerformingBranch: {
       branchName: string;
@@ -22,7 +22,7 @@ const SalesStatsSection = ({ summaryStatsData }: SalesStatsSectionProps) => {
   const summaryStats: SummaryStatType[] = [
     {
       title: "Total Revenue (YTD)",
-      value: formatPesoShort(summaryStatsData.totalSales ?? 0),
+      value: formatPesoShort(summaryStatsData?.totalSales ?? 0),
       subtitle: "↑ +18.5% vs last year",
       subtitleColor: "text-green-600",
       icon: DollarSign,
@@ -31,7 +31,7 @@ const SalesStatsSection = ({ summaryStatsData }: SalesStatsSectionProps) => {
     },
     {
       title: "Avg Revenue/Branch",
-      value: formatPesoShort(summaryStatsData.avgSalesPerBranch ?? 0),
+      value: formatPesoShort(summaryStatsData?.avgSalesPerBranch ?? 0),
       subtitle: "↑ +12.3% vs last year",
       subtitleColor: "text-green-600",
       icon: TrendingUpIcon,
@@ -40,8 +40,8 @@ const SalesStatsSection = ({ summaryStatsData }: SalesStatsSectionProps) => {
     },
     {
       title: "Best Performing Branch",
-      value: summaryStatsData.bestPerformingBranch.branchName,
-      subtitle: `${formatPesoShort(summaryStatsData.bestPerformingBranch.sales)} revenue`,
+      value: summaryStatsData?.bestPerformingBranch?.branchName || "N/A",
+      subtitle: `${formatPesoShort(summaryStatsData?.bestPerformingBranch?.sales || 0)} revenue`,
       subtitleColor: "text-green-600",
       icon: Trophy,
       iconColor: "text-yellow-600",
@@ -49,8 +49,8 @@ const SalesStatsSection = ({ summaryStatsData }: SalesStatsSectionProps) => {
     },
     {
       title: "Fastest Growing",
-      value: summaryStatsData.fastestGrowingBranch.branchName,
-      subtitle: `↑ ${summaryStatsData.fastestGrowingBranch.growthPercent}% growth`,
+      value: summaryStatsData?.fastestGrowingBranch?.branchName || "N/A",
+      subtitle: `↑ ${summaryStatsData?.fastestGrowingBranch?.growthPercent || 0}% growth`,
       subtitleColor: "text-green-600",
       icon: Zap,
       iconColor: "text-purple-600",

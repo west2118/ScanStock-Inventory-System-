@@ -453,7 +453,7 @@ export const CATEGORY_PERFORMANCE_QUERY = `
 ${DATE_RANGE_CTE}
 
 SELECT
-  p.category AS "name",
+  c.name AS "name",
 
   COALESCE(
     SUM(ti.quantity),
@@ -473,6 +473,9 @@ JOIN transactions t
 JOIN products p
   ON p.id = ti.product_id
 
+LEFT JOIN categories c
+  ON c.id = p.category_id
+
 CROSS JOIN date_range dr
 
 WHERE t.branch_id = $5
@@ -480,7 +483,7 @@ WHERE t.branch_id = $5
   AND t.created_at >= dr.start_date
   AND t.created_at < dr.end_date
 
-GROUP BY p.category
+GROUP BY c.name
 
 ORDER BY value1 DESC
 `;
@@ -562,12 +565,13 @@ LIMIT 5
 
 export const STOCK_CATEGORY_QUERY = `
 SELECT
-  p.category AS "label",
+  c.name AS "label",
   COALESCE(SUM(bi.stock), 0) AS "value"
 FROM branch_inventory bi
 JOIN products p ON p.id = bi.product_id
+LEFT JOIN categories c ON c.id = p.category_id
 WHERE bi.branch_id = $1
-GROUP BY p.category
+GROUP BY c.name
 ORDER BY "value" DESC
 LIMIT 5
 `;
@@ -586,7 +590,7 @@ SELECT
   ) AS "stockValue",
 
   COALESCE(
-    SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'),
+    SUM(sm.quantity) FILTER (WHERE sm.movement_type = 'OUT'),
     0
   ) AS "sales",
 
@@ -595,7 +599,7 @@ SELECT
       WHEN bi.stock = 0 THEN 0
       ELSE (
         COALESCE(
-          SUM(sm.quantity) FILTER (WHERE sm.type = 'OUT'),
+          SUM(sm.quantity) FILTER (WHERE sm.movement_type = 'OUT'),
           0
         ) / bi.stock::numeric
       ) * 100

@@ -18,11 +18,13 @@ import { useAddCart } from "../Hooks/useAddCart";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../context/AuthContext";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
   const [quantity, setQuantity] = useState(1);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const addCartMutation = useAddCart();
 
@@ -123,13 +125,15 @@ const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
             {pesoFormatter.format(Number(product.price))}
           </span>
           {product.originalPrice && (
-            <span className="text-lg text-gray-400 line-through">
-              ₱{product.originalPrice.toLocaleString()}
-            </span>
+            <>
+              <span className="text-lg text-gray-400 line-through">
+                ₱{Number(product.originalPrice).toLocaleString()}
+              </span>
+              <span className="bg-red-100 text-red-700 text-sm px-2 py-1 rounded-full">
+                Save ₱{(Number(product.originalPrice) - Number(product.price)).toLocaleString()}
+              </span>
+            </>
           )}
-          <span className="bg-red-100 text-red-700 text-sm px-2 py-1 rounded-full">
-            Save ₱{(product.originalPrice - product.price).toLocaleString()}
-          </span>
         </div>
       </div>
 
@@ -162,31 +166,56 @@ const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
 
       {/* Action Buttons */}
       <div className="flex gap-3 mb-6">
-        <button className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-          Buy It Now
-        </button>
+        {product.stock <= 0 ? (
+          <button
+            disabled
+            className="flex-1 bg-gray-300 text-gray-500 py-3 rounded-lg font-semibold cursor-not-allowed"
+          >
+            Out of Stock
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => {
+                if (!user) return navigate("/login");
+                addCartMutation.mutate(
+                  { productId: product.id, quantity, isBuyNow: true },
+                  { onSuccess: () => navigate("/cart") }
+                );
+              }}
+              disabled={addCartMutation.isPending}
+              className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              Buy It Now
+            </button>
 
-        <button
-          onClick={() => addCartMutation.mutate(
-            { productId: product.id, quantity },
-            { onSuccess: () => {
-                setQuantity(1);
-                toast.success("Added to cart successfully!");
-              }
-            }
-          )}
-          disabled={addCartMutation.isPending}
-          className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors flex items-center justify-center gap-2"
-        >
-          <ShoppingCart className="w-5 h-5" />
-        </button>
+            <button
+              onClick={() => {
+                if (!user) return navigate("/login");
+                addCartMutation.mutate(
+                  { productId: product.id, quantity },
+                  {
+                    onSuccess: () => {
+                      setQuantity(1);
+                      toast.success("Added to cart successfully!");
+                    }
+                  }
+                )
+              }}
+              disabled={addCartMutation.isPending}
+              className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <ShoppingCart className="w-5 h-5" />
+            </button>
+          </>
+        )}
 
         <button
           onClick={() => {
             if (user) {
               toggleFavoriteMutation.mutate();
             } else {
-              // Optionally handle unauthenticated state (e.g. redirect to login)
+              navigate("/login");
             }
           }}
           disabled={toggleFavoriteMutation.isPending}
@@ -201,7 +230,7 @@ const ProductInfo = ({ product }: { product: ProductDetailsType }) => {
       </div>
 
       {/* Features Grid */}
-      <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-xl mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="flex items-center gap-2">
           <Truck className="w-4 h-4 text-green-600" />
           <span className="text-sm">Free Shipping ₱5,000+</span>

@@ -28,7 +28,7 @@ const OrderListCard = ({
       className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
     >
       {/* Order Header */}
-      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
+      <div className="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm text-gray-500">Order ID</p>
           <p className="font-mono font-medium text-gray-900">
@@ -73,7 +73,7 @@ const OrderListCard = ({
       </div>
 
       {/* Order Footer */}
-      <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+      <div className="px-6 py-4 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <MapPin size={14} />
           <span>

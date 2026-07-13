@@ -32,8 +32,8 @@ const CartOrderSummary = ({ cartItems }: { cartItems: CartItem[] }) => {
         {/* Checkout Button */}
         <button
           onClick={() => checkoutMutation.mutate()}
-          disabled={checkoutMutation.isPending}
-          className="w-full mt-5 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+          disabled={cartItems.filter(item => item.isSelected).length === 0 || checkoutMutation.isPending}
+          className="w-full mt-5 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
         >
           Proceed to Checkout
         </button>

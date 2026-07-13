@@ -1,5 +1,5 @@
 import { Truck } from "lucide-react";
-import { dateFormatter, getMovementUI } from "../../../utils/utils";
+import { dateFormatter, getMovementUI, truncateWords } from "../../../utils/utils";
 
 type DashboardRecentStockProps = {
   data: {
@@ -52,8 +52,8 @@ const DashboardRecentStock = ({ data }: DashboardRecentStockProps) => {
 
               return (
                 <tr key={movement.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {movement.productName}
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900" title={movement.productName}>
+                    {truncateWords(movement.productName, 3)}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">
                     <span

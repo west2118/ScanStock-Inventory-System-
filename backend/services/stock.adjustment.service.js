@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 
 export const createStockAdjustmentService = async ({
   branchId,
-  reason,
+  adjustmentReason,
   items,
   createdBy,
   adjustmentType,
@@ -17,14 +17,14 @@ export const createStockAdjustmentService = async ({
       INSERT INTO stock_adjustments (
         branch_id,
         status,
-        reason,
+        adjustment_reason,
         created_by,
         adjustment_type
       )
       VALUES ($1, 'pending', $2, $3, $4)
       RETURNING *
       `,
-      [branchId, reason, createdBy, adjustmentType],
+      [branchId, adjustmentReason, createdBy, adjustmentType],
     );
 
     const adjustment = adjustmentResult.rows[0];
@@ -48,6 +48,8 @@ export const createStockAdjustmentService = async ({
 
     return adjustment;
   } catch (error) {
+    console.log("Error: ", error.message)
+
     await client.query("ROLLBACK");
     throw error;
   } finally {
@@ -58,6 +60,7 @@ export const createStockAdjustmentService = async ({
 export const approveStockAdjustmentService = async ({
   adjustmentId,
   handledBy,
+  reason,
 }) => {
   const client = await pool.connect();
 
@@ -231,7 +234,7 @@ export const approveStockAdjustmentService = async ({
           item.quantity,
           beforeStock,
           afterStock,
-          item.remarks || adjustment.reason || null,
+          item.remarks || adjustment.adjustment_reason || null,
         ],
       );
     }
@@ -242,10 +245,11 @@ export const approveStockAdjustmentService = async ({
       SET
         status = 'approved',
         handled_by = $1,
-        handled_at = NOW()
+        handled_at = NOW(),
+        reason = $3
       WHERE id = $2
       `,
-      [handledBy, adjustmentId],
+      [handledBy, adjustmentId, reason],
     );
 
     await client.query("COMMIT");
@@ -265,7 +269,7 @@ export const approveStockAdjustmentService = async ({
 export const rejectStockAdjustmentService = async ({
   adjustmentId,
   handledBy,
-  rejectionReason,
+  reason,
 }) => {
   const result = await pool.query(
     `
@@ -274,12 +278,12 @@ export const rejectStockAdjustmentService = async ({
       status = 'rejected',
       handled_by = $1,
       handled_at = NOW(),
-      rejection_reason = $2
+      reason = $2
     WHERE id = $3
     AND status = 'pending'
     RETURNING *
     `,
-    [handledBy, rejectionReason, adjustmentId],
+    [handledBy, reason, adjustmentId],
   );
 
   if (!result.rows.length) {
@@ -303,7 +307,7 @@ export const getStockAdjustmentsService = async ({
 
   if (search) {
     filterValues.push(`%${search}%`);
-    conditions.push(`sa.reason ILIKE $${filterValues.length}`);
+    conditions.push(`sa.adjustment_reason ILIKE $${filterValues.length}`);
   }
 
   if (status) {
@@ -333,12 +337,13 @@ export const getStockAdjustmentsService = async ({
   const query = `
     SELECT
       sa.id,
-      sa.status,
-      sa.reason,
-      sa.created_at AS "createdAt",
       sa.adjustment_type AS "adjustmentType",
-      CONCAT(hu.first_name, ' ', hu.last_name) AS "handledBy",
+      sa.adjustment_reason AS "adjustmentReason",
+      sa.status,
+      sa.reason AS "reason",
+      sa.created_at AS "createdAt",
       sa.handled_at AS "handledAt",
+      CONCAT(hu.first_name, ' ', hu.last_name) AS "handledBy",
 
       u.id AS "createdById",
       CONCAT(u.first_name, ' ', u.last_name) AS "createdByName",

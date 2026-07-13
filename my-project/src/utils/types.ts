@@ -109,22 +109,21 @@ export type TransactionType = {
 
 export type DashboardSummaryType = {
   availableStock: number;
-  differenceChangeStockIn: number;
-  differenceChangeStockOut: number;
+  differenceChangeRevenue: number;
+  differenceChangeItemsSale: number;
   lowStocks: number;
-  stockInToday: number;
-  stockOutToday: number;
+  revenueToday: number;
+  itemsSaleToday: number;
 };
 
 export type DashboardChartsType = {
   dateRange: string;
-  weeklyStockMovement: {
+  salesTrends: {
     date: string;
     label: string;
     value1: number;
-    value2: number;
   }[];
-  stockCategory: {
+  revenueCategory: {
     name: string;
     value1: number;
   }[];
@@ -132,10 +131,13 @@ export type DashboardChartsType = {
     name: string;
     value: number;
   }[];
-  netChange: {
+  orderStatusDistribution: {
     date: string;
     label: string;
-    value: number;
+    pending: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
   }[];
   lowStock: {
     id: number;
@@ -172,16 +174,15 @@ export type StockAdjustmentItemType = {
 
 export type StockAdjustmentType = {
   id: number;
-  reason: string;
-  status: "pending" | "approved" | "rejected" | "voided";
-  adjustmentType: "IN" | "OUT";
-
+  adjustmentType: string;
+  adjustmentReason: string;
+  status: string;
   createdAt: string;
+  handledAt: string | null;
+  handledBy: string | null;
   createdById: number;
   createdByName: string;
-  handledBy: string;
-  handledAt: string;
-
+  reason: string | null;
   items: StockAdjustmentItemType[];
 };
 
@@ -225,6 +226,17 @@ export type ProductSpecificationType = {
   value: string;
 };
 
+export type ProductReviewType = {
+  avatar: string
+  content: string
+  date: string
+  id: number
+  rating: number
+  title: string
+  user: string
+  verified: boolean
+}
+
 export type ProductDetailsType = {
   id: number;
 
@@ -239,6 +251,7 @@ export type ProductDetailsType = {
 
   stock: number;
 
+  originalPrice: string;
   price: string;
 
   status: string;
@@ -255,6 +268,13 @@ export type ProductDetailsType = {
 
   images: ProductImageType[];
   specifications: ProductSpecificationType[];
+  reviews?: ProductReviewType[];
+  branchAvailability?: {
+    branch: string;
+    address: string;
+    phone: string;
+    stock: number;
+  }[];
 };
 
 export type CartItem = {

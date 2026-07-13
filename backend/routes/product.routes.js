@@ -22,6 +22,7 @@ import {
   updateProduct,
   getFeaturedProducts,
   getAdminProductById,
+  getRelatedProducts,
 } from "../controllers/v2/products.controller.js";
 
 const router = express.Router();
@@ -40,6 +41,7 @@ router.get("/admin/products/:id", verifyToken, getAdminProductById);
 router.get("/admin/products-stats", verifyToken, getAdminProductStats);
 router.get("/collections", getCollections);
 router.get("/collections/:id", getProductById);
+router.get("/collections/:id/related", getRelatedProducts);
 router.get(
   "/product-scan/:barcode",
   verifyToken,
@@ -49,6 +51,12 @@ router.get(
 router.get("/products/new-arrivals", getNewArrivals);
 router.get("/products/best-sellers", getBestSellers);
 router.get("/products/featured", getFeaturedProducts);
+router.get(
+  "/products/listed",
+  verifyToken,
+  authorizeRoles("admin", "branch_manager", "staff"),
+  getProductsPOS,
+);
 
 // router.put(
 //   "/product/:id",
@@ -74,12 +82,7 @@ router.get("/products/featured", getFeaturedProducts);
 //   authorizeRoles("admin", "branch_manager", "staff"),
 //   getProducts,
 // );
-// router.get(
-//   "/products/listed",
-//   verifyToken,
-//   authorizeRoles("admin", "branch_manager", "staff"),
-//   getProductsPOS,
-// );
+
 // router.get(
 //   "/product-scan/:barcode",
 //   verifyToken,

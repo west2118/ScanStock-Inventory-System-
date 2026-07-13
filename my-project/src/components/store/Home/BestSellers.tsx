@@ -1,7 +1,15 @@
 import { ChevronRight } from "lucide-react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { fetchData } from "../../../utils/utils";
 import ProductCarousel from "./ProductCarousel";
 
-const BestSellers = ({ bestSellers }: { bestSellers: any }) => {
+const BestSellers = () => {
+  const { data: bestSellersResponse } = useSuspenseQuery({
+    queryKey: ["best-sellers"],
+    queryFn: fetchData(`${import.meta.env.VITE_API_URL}/products/best-sellers`),
+  });
+
+  const bestSellers = bestSellersResponse?.products ?? [];
   return (
     <section className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

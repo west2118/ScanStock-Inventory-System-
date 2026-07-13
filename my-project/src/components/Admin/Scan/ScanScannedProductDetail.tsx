@@ -39,7 +39,7 @@ const ScanScannedProductDetail = ({
           body: JSON.stringify({
             items,
             adjustmentType: scanMode,
-            reason: reason,
+            adjustmentReason: reason || "Manual stock adjustment",
           }),
         },
       );

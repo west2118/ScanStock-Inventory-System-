@@ -22,6 +22,11 @@ import cartRoutes from "./routes/cart.routes.js";
 import checkoutRoutes from "./routes/checkout.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import wishlistRoutes from "./routes/wishlist.routes.js";
+import salesRoutes from "./routes/sales.routes.js";
+import inventoryRoutes from "./routes/inventory.routes.js"
+import productivityRoutes from "./routes/productivity.routes.js";
+import leaderboardRoutes from "./routes/leaderboard.routes.js";
+import userRoutes from "./routes/users.routes.js";
 
 import createProductTables from "./data/createProductTables.js";
 import createStockMovementTable from "./data/createStockMovement.js";
@@ -85,6 +90,12 @@ app.use("/api", cartRoutes);
 app.use("/api", checkoutRoutes);
 app.use("/api", orderRoutes);
 app.use("/api", wishlistRoutes);
+
+app.use("/api", salesRoutes);
+app.use("/api", inventoryRoutes);
+app.use("/api", productivityRoutes);
+app.use("/api", leaderboardRoutes);
+app.use("/api", userRoutes);
 
 app.use(errorHandler);
 

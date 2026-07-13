@@ -35,10 +35,24 @@ const roleConfig = {
     label: "Inventory Staff",
     icon: Users,
   },
+
+  customer: {
+    bg: "bg-orange-100",
+    text: "text-orange-700",
+    label: "Customer",
+    icon: Eye,
+  },
+
+  viewer: {
+    bg: "bg-gray-100",
+    text: "text-gray-700",
+    label: "Viewer",
+    icon: Eye,
+  },
 };
 
 const RoleBadge = ({ role }: { role: string }) => {
-  const config = roleConfig[role] || roleConfig.viewer;
+  const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.viewer;
 
   const Icon = config.icon;
 

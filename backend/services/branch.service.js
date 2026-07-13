@@ -167,13 +167,19 @@ export const getBranchesService = async ({
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const branchesQuery = `
-    WITH sales AS (
+    WITH BranchSales AS (
       SELECT
         branch_id,
         SUM(total_amount) AS total_sales
       FROM transactions
       WHERE status = 'completed'
-        AND payment_status = 'paid'
+      GROUP BY branch_id
+    ),
+    BranchOrders AS (
+      SELECT branch_id, SUM(total_amount) AS total_sales
+      FROM orders
+      WHERE order_status IN ('delivered', 'completed')
+        AND EXISTS (SELECT 1 FROM order_payments op WHERE op.order_id = orders.id AND op.payment_status = 'paid')
       GROUP BY branch_id
     ),
 
@@ -191,6 +197,9 @@ export const getBranchesService = async ({
       b.branch_name AS "branchName",
       b.branch_code AS "branchCode",
       b.address AS location,
+      b.opening_time AS "openingTime",
+      b.closing_time AS "closingTime",
+      b.contact,
       b.status,
       b.created_at AS "createdAt",
 
@@ -204,7 +213,10 @@ export const getBranchesService = async ({
         ELSE NULL
       END AS manager,
 
-      COALESCE(s.total_sales, 0) AS "totalSales",
+      COALESCE(
+        CASE WHEN b.branch_name ILIKE '%Central%' THEN o.total_sales
+        ELSE s.total_sales END,
+      0) AS "totalSales",
       COALESCE(i.total_inventory, 0) AS "totalInventory"
 
     FROM branches b
@@ -212,8 +224,11 @@ export const getBranchesService = async ({
     LEFT JOIN users u
       ON u.id = b.manager_id
 
-    LEFT JOIN sales
+    LEFT JOIN BranchSales s
       ON s.branch_id = b.id
+
+    LEFT JOIN BranchOrders o
+      ON o.branch_id = b.id
 
     LEFT JOIN inventory i
       ON i.branch_id = b.id
@@ -257,7 +272,11 @@ export const getBranchesSummaryStatsService = async () => {
   const summaryResult = await pool.query(`
     SELECT 
       (SELECT COUNT(*) FROM branches)::int AS "totalBranches",
-      (SELECT COALESCE(SUM(total_amount), 0) FROM transactions)::int AS "totalSales",
+      (
+        (SELECT COALESCE(SUM(total_amount), 0) FROM transactions WHERE status = 'completed')
+        +
+        (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE order_status IN ('delivered', 'completed') AND EXISTS (SELECT 1 FROM order_payments op WHERE op.order_id = orders.id AND op.payment_status = 'paid'))
+      )::int AS "totalSales",
       (SELECT COALESCE(SUM(stock), 0) FROM branch_inventory)::int AS "totalStocks"
   `);
 
@@ -266,12 +285,28 @@ export const getBranchesSummaryStatsService = async () => {
 
 export const getBranchesChartsService = async (client) => {
   const salesQuery = `
+    WITH BranchSales AS (
+        SELECT branch_id, SUM(total_amount) AS total_sales
+        FROM transactions
+        WHERE status = 'completed'
+        GROUP BY branch_id
+    ),
+    BranchOrders AS (
+        SELECT branch_id, SUM(total_amount) AS total_sales
+        FROM orders
+        WHERE order_status IN ('delivered', 'completed')
+          AND EXISTS (SELECT 1 FROM order_payments op WHERE op.order_id = orders.id AND op.payment_status = 'paid')
+        GROUP BY branch_id
+    )
     SELECT
       b.branch_name AS name,
-      COALESCE(SUM(t.total_amount), 0)::int AS value
+      COALESCE(
+          CASE WHEN b.branch_name ILIKE '%Central%' THEN o.total_sales
+          ELSE s.total_sales END,
+      0)::int AS value
     FROM branches b
-    LEFT JOIN transactions t ON t.branch_id = b.id
-    GROUP BY b.id, b.branch_name
+    LEFT JOIN BranchSales s ON s.branch_id = b.id
+    LEFT JOIN BranchOrders o ON o.branch_id = b.id
     ORDER BY value DESC;
   `;
 

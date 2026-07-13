@@ -24,7 +24,6 @@ const InventoryStockModal = ({
   selectedProduct,
   movementType,
 }: InventoryStockModalProps) => {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { formData, handleChange } = useForm<FormData>({
     quantity: 0,
@@ -43,8 +42,7 @@ const InventoryStockModal = ({
           },
         ],
         adjustmentType: movementType,
-        reason: formData.notes,
-        branchId: user?.branchId,
+        adjustmentReason: formData.notes || "Manual stock adjustment",
       });
 
       const response = await fetch(
@@ -63,8 +61,7 @@ const InventoryStockModal = ({
               },
             ],
             adjustmentType: movementType,
-            reason: formData.notes,
-            branchId: user?.branchId,
+            adjustmentReason: formData.notes || "Manual stock adjustment",
           }),
         },
       );
@@ -197,9 +194,8 @@ const InventoryStockModal = ({
 
         {/* Stock Preview */}
         <div
-          className={`rounded-lg p-3 ${
-            isStockIn ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-          }`}
+          className={`rounded-lg p-3 ${isStockIn ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+            }`}
         >
           <p className="text-sm">
             Current Stock:{" "}
@@ -221,11 +217,10 @@ const InventoryStockModal = ({
             Cancel
           </button>
           <button
-            className={`flex-1 px-4 py-2 text-white rounded-lg ${
-              isStockIn
+            className={`flex-1 px-4 py-2 text-white rounded-lg ${isStockIn
                 ? "bg-green-600 hover:bg-green-700"
                 : "bg-red-600 hover:bg-red-700"
-            } transition-colors`}
+              } transition-colors`}
           >
             Confirm Stock {isStockIn ? "In" : "Out"}
           </button>

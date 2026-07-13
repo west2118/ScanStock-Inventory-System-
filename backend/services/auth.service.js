@@ -107,14 +107,12 @@ export const loginService = async ({ email, password }) => {
     [user.id, hash],
   );
 
+  const userData = await meService(user.id);
+
   return {
     accessToken,
     refreshToken,
-    user: {
-      id: user.id,
-      role: user.role,
-      branchId: user.branch_id,
-    },
+    user: userData,
   };
 };
 

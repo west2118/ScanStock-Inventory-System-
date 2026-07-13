@@ -1,4 +1,4 @@
-import { Minus, Plus, X } from "lucide-react";
+import { Check, Minus, Plus, X } from "lucide-react";
 import type { CartItem } from "../../../utils/types";
 import { pesoFormatter } from "../../../utils/utils";
 import { useAddCart } from "../Hooks/useAddCart";
@@ -29,12 +29,16 @@ const CartItemCard = ({ item }: { item: CartItem }) => {
 
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3 shrink-0">
-          <input
-            type="checkbox"
-            checked={item.isSelected}
-            onChange={() => selectCartMutation.mutate(item.productId)}
-            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-          />
+          <button
+            onClick={() => selectCartMutation.mutate(item.productId)}
+            className={`w-6 h-6 flex shrink-0 items-center justify-center rounded-md border-2 transition-all duration-200 ${
+              item.isSelected
+                ? "bg-blue-600 border-blue-600 shadow-sm shadow-blue-200"
+                : "bg-white border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+            }`}
+          >
+            {item.isSelected && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+          </button>
 
           <div className="w-24 h-24 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
             <img

@@ -8,6 +8,7 @@ import {
 import { asyncHandler } from "../../utils/helper.js";
 
 export const getWishlist = asyncHandler(async (req, res) => {
+  if (!req.user) return res.status(200).json([]);
   const customerId = req.user.id;
   const wishlist = await getWishlistService(customerId);
   return res.status(200).json(wishlist);
@@ -53,6 +54,7 @@ export const removeBulkWishlist = asyncHandler(async (req, res) => {
 });
 
 export const getWishlistCount = asyncHandler(async (req, res) => {
+  if (!req.user) return res.status(200).json({ count: 0 });
   const customerId = req.user.id;
   const count = await getWishlistCountService(customerId);
   return res.status(200).json(count);

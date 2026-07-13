@@ -74,7 +74,7 @@ const StockAdjustmentTableRow = ({
       </td>
 
       <td className="px-6 py-4 align-center">
-        <p className="text-sm text-gray-700 line-clamp-2">{adj.reason}</p>
+        <p className="text-sm text-gray-700 line-clamp-2">{adj.adjustmentReason}</p>
       </td>
 
       <td className="px-6 py-4 text-center align-center">

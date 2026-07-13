@@ -9,6 +9,11 @@ export const refreshAccessToken = async () => {
   if (!res.ok) {
     throw new Error("Refresh token expired");
   }
+
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error("Refresh token expired");
+  }
 };
 
 export const fetchData =
@@ -130,6 +135,15 @@ export const pesoFormatter = new Intl.NumberFormat("en-PH", {
 
 export const capitalizeFirst = (text: string) =>
   text.charAt(0).toUpperCase() + text.slice(1);
+
+export const truncateWords = (str: string, max: number) => {
+  if (!str) return str;
+  const words = str.split(" ");
+  if (words.length > max) {
+    return words.slice(0, max).join(" ") + "...";
+  }
+  return str;
+};
 
 export const dateFormatter = (createdAt: string) => {
   const date = new Date(createdAt);

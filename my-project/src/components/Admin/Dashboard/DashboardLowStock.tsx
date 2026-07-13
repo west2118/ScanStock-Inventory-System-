@@ -1,5 +1,5 @@
 import { AlertTriangle } from "lucide-react";
-import { getStockStatus } from "../../../utils/utils";
+import { getStockStatus, truncateWords } from "../../../utils/utils";
 
 type DashboardLowStockProps = {
   data: {
@@ -47,8 +47,8 @@ const DashboardLowStock = ({ data }: DashboardLowStockProps) => {
               <tr key={item.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm">
                   <div className="flex flex-col">
-                    <span className="font-medium text-gray-900">
-                      {item.productName}
+                    <span className="font-medium text-gray-900" title={item.productName}>
+                      {truncateWords(item.productName, 3)}
                     </span>
                     <span className="text-xs text-gray-500">{item.sku}</span>
                   </div>

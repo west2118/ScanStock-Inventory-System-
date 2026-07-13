@@ -1,6 +1,34 @@
 import { Star } from "lucide-react";
 
-const Testimonials = ({ testimonials }: { testimonials: any }) => {
+const Testimonials = () => {
+  const testimonials = [
+    {
+      id: 1,
+      name: "John Reyes",
+      role: "Professional Gamer",
+      rating: 5,
+      text: "Best computer parts store in the Philippines! Got my RTX 4090 at a great price. Customer service is top notch!",
+      image: "https://randomuser.me/api/portraits/men/1.jpg",
+    },
+    {
+      id: 2,
+      name: "Maria Santos",
+      role: "Content Creator",
+      rating: 5,
+      text: "Fast delivery and genuine products. Built my entire editing rig from ByteForge. Highly recommended!",
+      image: "https://randomuser.me/api/portraits/women/2.jpg",
+    },
+    {
+      id: 3,
+      name: "Mike Chen",
+      role: "IT Professional",
+      rating: 5,
+      text: "Great selection of components and knowledgeable staff. Will definitely buy again.",
+      image: "https://randomuser.me/api/portraits/men/3.jpg",
+    },
+  ];
+
+
   return (
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

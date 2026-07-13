@@ -12,6 +12,7 @@ const createBranchTable = async () => {
 
       region VARCHAR(255) NOT NULL,
       address VARCHAR(255) NOT NULL,
+      contact VARCHAR(50),
       manager_id INT REFERENCES users(id) ON DELETE SET NULL,
 
       status VARCHAR(255) DEFAULT 'active'

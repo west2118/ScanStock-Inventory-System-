@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
 import { calculateSales } from "../utils/transactions.js";
+import { updateProductStockService } from "./branch.inventory.service.js";
 
 export const createTransactionService = async (
   client,
@@ -142,7 +143,8 @@ export const createTransactionFlowService = async (client, payload) => {
       branchId: branch_id,
       action: "OUT",
       quantity: item.quantity,
-      notes,
+      price: item.price,
+      reference: transaction.id,
       handledBy: handled_by,
     });
   }
@@ -229,7 +231,7 @@ export const getTransactionsService = async ({
     SELECT
       t.id,
       t.transaction_number AS "transactionNumber",
-      u.name AS "handledBy",
+      CONCAT(u.first_name, ' ', u.last_name) AS "handledBy",
       t.payment_method AS "paymentMethod",
       t.customer_name AS "customerName",
       t.customer_tin AS "customerTin",
@@ -251,7 +253,7 @@ export const getTransactionsService = async ({
       t.created_at AS "createdAt",
 
       t.void_reason AS "voidReason",
-      u.name AS "voidedBy",
+      CONCAT(u.first_name, ' ', u.last_name) AS "voidedBy",
       t.voided_at AS "voidedAt",
 
       COALESCE(
@@ -278,7 +280,8 @@ export const getTransactionsService = async ({
 
     GROUP BY
       t.id,
-      u.name
+      u.first_name,
+      u.last_name
 
     ORDER BY t.created_at DESC
     LIMIT $${idx} OFFSET $${idx + 1}

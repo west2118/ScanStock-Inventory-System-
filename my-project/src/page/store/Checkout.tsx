@@ -11,6 +11,11 @@ import { useParams } from "react-router-dom";
 import CheckoutSteps from "../../components/store/Checkout/CheckoutSteps";
 import CheckoutContent from "../../components/store/Checkout/CheckoutContent";
 import { toast } from "react-toastify";
+import {
+  shippingAddressSchema,
+  deliveryMethodSchema,
+  paymentMethodSchema,
+} from "../../validation/checkout.validation";
 
 const CheckoutPage = () => {
   const { id } = useParams();
@@ -63,40 +68,32 @@ const CheckoutPage = () => {
   )?.price;
 
   const validateCurrentStep = () => {
+    let result;
+
     switch (currentStep) {
       case 1:
-        if (
-          !formData.address.firstName ||
-          !formData.address.lastName ||
-          !formData.address.email ||
-          !formData.address.phone ||
-          !formData.address.addressLine ||
-          !formData.address.barangay ||
-          !formData.address.city ||
-          !formData.address.province
-        ) {
-          toast.error("Please complete your shipping address.");
-          return false;
-        }
-        return true;
-
+        result = shippingAddressSchema.safeParse(formData.address);
+        break;
       case 2:
-        if (!formData.deliveryMethod) {
-          toast.error("Please select a delivery method.");
-          return false;
-        }
-        return true;
-
+        result = deliveryMethodSchema.safeParse({ deliveryMethod: formData.deliveryMethod });
+        break;
       case 3:
-        if (!formData.paymentMethod) {
-          toast.error("Please select a payment method.");
-          return false;
-        }
-        return true;
-
+        result = paymentMethodSchema.safeParse({ paymentMethod: formData.paymentMethod });
+        break;
       default:
         return true;
     }
+
+    if (!result.success) {
+      const errorMessage =
+        result.error?.issues?.[0]?.message ||
+        result.error?.errors?.[0]?.message ||
+        "Please fill in all required fields correctly.";
+      toast.error(errorMessage);
+      return false;
+    }
+
+    return true;
   };
 
   const handleNextStep = () => {

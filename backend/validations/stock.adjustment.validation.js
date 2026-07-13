@@ -11,9 +11,8 @@ const stockAdjustmentItemSchema = z.object({
 export const createStockAdjustmentSchema = z
   .object({
     adjustmentType: z.enum(["IN", "OUT"]),
-    reason: z.string().trim().min(3, "Reason is required").max(500),
+    adjustmentReason: z.string().trim().min(1, "Adjustment Reason is required").max(500),
     items: z
       .array(stockAdjustmentItemSchema)
       .min(1, "At least one adjustment item is required"),
-  })
-  .strict();
+  });

@@ -770,14 +770,30 @@ export const getProductByIdService = async (productSlug) => {
     [product.id],
   );
 
+  const branchAvailabilityResult = await pool.query(
+    `
+    SELECT
+      br.branch_name AS branch,
+      br.address,
+      br.contact AS phone,
+      COALESCE(bi.stock, 0) AS stock
+    FROM branches br
+    LEFT JOIN branch_inventory bi ON bi.branch_id = br.id AND bi.product_id = $1
+    WHERE br.status = 'active'
+    ORDER BY br.branch_name ASC
+    `,
+    [product.id]
+  );
+
   return {
     ...product,
     specifications: specificationsResult.rows,
     images: imagesResult.rows,
-    reviews: reviewsResult.rows.map(r => ({
+    reviews: reviewsResult.rows.map((r) => ({
       ...r,
-      date: new Date(r.date).toISOString().split('T')[0]
+      date: new Date(r.date).toISOString().split("T")[0],
     })),
+    branchAvailability: branchAvailabilityResult.rows,
   };
 };
 
@@ -1098,7 +1114,7 @@ export const productSummaryStatsService = async () => {
   const query = `
     SELECT
       (SELECT COUNT(*) FROM products WHERE status <> 'archived') AS "totalProducts",
-      (SELECT COUNT(DISTINCT category) FROM products WHERE status <> 'archived') AS "totalCategories",
+      (SELECT COUNT(DISTINCT category_id) FROM products WHERE status <> 'archived') AS "totalCategories",
       (
         SELECT COUNT(*)
         FROM products p
@@ -1107,7 +1123,7 @@ export const productSummaryStatsService = async () => {
             SELECT 1
             FROM stock_movements sm
             WHERE sm.product_id = p.id
-            AND sm.type = 'OUT'
+            AND sm.movement_type = 'OUT'
             AND sm.created_at >= NOW() - INTERVAL '7 days'
           )
       ) AS "noSalesLast7Days",
@@ -1126,8 +1142,6 @@ export const productSummaryStatsService = async () => {
 };
 
 export const getProductsPOSService = async (branchId, search = "") => {
-  console.log("BranchID: ", branchId);
-
   const values = [branchId];
   let idx = 2;
 
@@ -1140,7 +1154,7 @@ export const getProductsPOSService = async (branchId, search = "") => {
         p.product_name ILIKE $${idx}
         OR p.sku ILIKE $${idx}
         OR p.barcode ILIKE $${idx}
-        OR p.category ILIKE $${idx}
+        OR c.name ILIKE $${idx}
       )
     `);
 
@@ -1159,12 +1173,11 @@ export const getProductsPOSService = async (branchId, search = "") => {
       p.barcode,
       p.product_name AS "productName",
       p.price,
-      p.category,
+      c.name AS category,
       p.status,
       p.vat_type AS "vatType",
 
       bi.branch_id AS "branchId",
-      bi.location,
 
       COALESCE(bi.stock, 0) AS stock,
       COALESCE(bi.stock_low, 0) AS "stockLow",
@@ -1175,6 +1188,7 @@ export const getProductsPOSService = async (branchId, search = "") => {
       p.updated_at AS "updatedAt"
 
     FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN branch_inventory bi
       ON bi.product_id = p.id
       AND bi.branch_id = $1
@@ -1197,15 +1211,17 @@ export const findProductByIdService = async (id) => {
       p.barcode,
       p.product_name AS "productName",
       p.price,
-      p.category,
+      c.name AS category,
       p.status,
       p.vat_type AS "vatType",
-      p.brand,
+      b.name AS brand,
 
       p.created_at AS "createdAt",
       p.updated_at AS "updatedAt"
 
     FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN brands b ON p.brand_id = b.id
 
     WHERE p.id = $1
   `;
@@ -1320,3 +1336,80 @@ export const getFeaturedProductsService = async () => {
 
   return featured;
 };
+
+// GET RELATED PRODUCTS
+export const getRelatedProductsService = async (slug) => {
+  const productRes = await pool.query(
+    `
+    SELECT id, category_id 
+    FROM products 
+    WHERE slug = $1
+    LIMIT 1
+    `,
+    [slug]
+  );
+
+  if (productRes.rowCount === 0) {
+    return [];
+  }
+
+  const { id: currentId, category_id: categoryId } = productRes.rows[0];
+
+  const relatedRes = await pool.query(
+    `
+    SELECT
+      p.id,
+      p.sku,
+      p.barcode,
+      p.slug,
+      p.product_name AS "productName",
+      p.price,
+      p.status,
+      p.vat_type AS "vatType",
+
+      c.name AS "category",
+      b.name AS "brandName",
+
+      COALESCE(bi.stock, 0) AS stock,
+      COALESCE(bi.stock_low, 0) AS "stockLow",
+      COALESCE(bi.stock_critical, 0) AS "stockCritical",
+      COALESCE(bi.stock_high, 0) AS "stockHigh",
+
+      ARRAY(
+        SELECT pi.image_url
+        FROM product_images pi
+        WHERE pi.product_id = p.id
+        ORDER BY pi.is_primary DESC, pi.sort_order ASC
+        LIMIT 2
+      ) AS images,
+
+      p.created_at AS "createdAt"
+
+    FROM products p
+
+    LEFT JOIN categories c
+      ON c.id = p.category_id
+
+    LEFT JOIN brands b
+      ON b.id = p.brand_id
+
+    LEFT JOIN branches br
+      ON br.branch_name = 'Central Warehouse'
+
+    LEFT JOIN branch_inventory bi
+      ON bi.product_id = p.id
+      AND bi.branch_id = br.id
+
+    WHERE p.status = 'active'
+      AND p.category_id = $1
+      AND p.id != $2
+
+    ORDER BY p.created_at DESC
+    LIMIT 4
+    `,
+    [categoryId, currentId]
+  );
+
+  return relatedRes.rows;
+};
+

@@ -27,7 +27,8 @@ const CartTotals = ({
     0,
   );
   const tax = subtotal * 0.12;
-  const total = subtotal + tax;
+  const discountAmount = Number(formData.discount) || 0;
+  const total = subtotal - discountAmount;
   const change = formData.cash
     ? (parseFloat(formData.cash) - total).toFixed(2)
     : 0;

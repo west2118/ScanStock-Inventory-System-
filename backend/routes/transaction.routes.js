@@ -5,7 +5,7 @@ import {
   createTransaction,
   getTransactions,
   getTransactionSummaryCards,
-} from "../controllers/v1/transaction.controller.js";
+} from "../controllers/v2/transaction.controller.js";
 
 const router = express.Router();
 

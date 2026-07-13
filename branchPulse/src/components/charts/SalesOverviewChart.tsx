@@ -7,13 +7,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { ChartData } from "../../lib/types";
+import type { MonthlySalesData } from "../../lib/types";
 import { pesoFormatter } from "../../lib/utils";
 
 const SalesOverviewChart = ({
   monthlySalesOverview,
 }: {
-  monthlySalesOverview: ChartData[];
+  monthlySalesOverview: MonthlySalesData[];
 }) => {
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -25,18 +25,26 @@ const SalesOverviewChart = ({
           tickFormatter={(value) => `₱${value / 1000}k`}
         />
         <Tooltip
-          formatter={(value) => [
+          formatter={(value, name) => [
             `${pesoFormatter.format(Number(value))}`,
-            "Sales",
+            name === "storeRevenue" ? "Store Revenue" : "Delivery Revenue",
           ]}
         />
         <Area
           type="monotone"
-          dataKey="value"
+          dataKey="storeRevenue"
           stroke="#3b82f6"
           fill="#3b82f6"
           fillOpacity={0.2}
-          name="Actual Sales"
+          name="storeRevenue"
+        />
+        <Area
+          type="monotone"
+          dataKey="deliveryRevenue"
+          stroke="#10b981"
+          fill="#10b981"
+          fillOpacity={0.2}
+          name="deliveryRevenue"
         />
       </AreaChart>
     </ResponsiveContainer>

@@ -23,13 +23,13 @@ const createStockAdjustmentTables = async () => {
               'OUT'
           )),
 
-      reason TEXT NOT NULL,
+      adjustment_reason TEXT NOT NULL,
 
       handled_by INT REFERENCES users(id) ON DELETE SET NULL,
 
       handled_at TIMESTAMPTZ,
 
-      rejection_reason TEXT,
+      reason TEXT,
 
       voided_by INT
           REFERENCES users(id)

@@ -87,7 +87,7 @@ const StockAdjustmentDetailsModal = ({
     >
       <div>
         {/* Header Info */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-500">Date</p>
             <p className="text-sm font-medium text-gray-900">
@@ -116,21 +116,28 @@ const StockAdjustmentDetailsModal = ({
               {stockAdjustment?.createdByName}
             </p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500">Handled By</p>
-            <p className="text-sm font-medium text-gray-900">
-              {stockAdjustment?.handledBy}
-            </p>
-          </div>
         </div>
 
         {/* Reason & Reference */}
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Reason</p>
-              <p className="text-sm text-gray-900">{stockAdjustment?.reason}</p>
+              <p className="text-xs text-gray-500">Adjustment Reason</p>
+              <p className="text-sm text-gray-900">{stockAdjustment?.adjustmentReason}</p>
             </div>
+            
+            {stockAdjustment?.reason && (
+              <div className="pt-3 border-t border-gray-200">
+                <p className="text-xs text-gray-500">
+                  {stockAdjustment.status === "approved"
+                    ? "Approval Reason"
+                    : stockAdjustment.status === "rejected"
+                      ? "Rejection Reason"
+                      : "Reason"}
+                </p>
+                <p className="text-sm text-gray-900">{stockAdjustment.reason}</p>
+              </div>
+            )}
           </div>
         </div>
 

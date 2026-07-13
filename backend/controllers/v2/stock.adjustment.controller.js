@@ -21,9 +21,16 @@ export const createStockAdjustment = asyncHandler(async (req, res) => {
 });
 
 export const approveStockAdjustment = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+
+  if (!reason) {
+    return res.status(400).json({ message: "Reason is required" });
+  }
+
   await approveStockAdjustmentService({
     adjustmentId: Number(req.params.id),
     handledBy: req.user.id,
+    reason,
   });
 
   res.status(200).json({
@@ -33,10 +40,16 @@ export const approveStockAdjustment = asyncHandler(async (req, res) => {
 });
 
 export const rejectStockAdjustment = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+
+  if (!reason) {
+    return res.status(400).json({ message: "Reason is required" });
+  }
+
   const adjustment = await rejectStockAdjustmentService({
     adjustmentId: Number(req.params.id),
     handledBy: req.user.id,
-    rejectionReason: req.body.rejectionReason,
+    reason,
   });
 
   res.status(200).json({
